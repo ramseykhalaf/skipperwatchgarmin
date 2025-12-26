@@ -18,7 +18,8 @@ class skipperwatchApp extends Application.AppBase {
 
     // Return the initial view of your application here
     function getInitialView() as [Views] or [Views, InputDelegates] {
-        return [ new skipperwatchView(), new skipperwatchDelegate() ];
+        var timePickerView = new TimePickerView();
+        return [ timePickerView, new TimePickerDelegate(timePickerView) ];
     }
 
 }
