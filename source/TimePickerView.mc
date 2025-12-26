@@ -1,12 +1,14 @@
 import Toybox.Graphics;
 import Toybox.Lang;
 import Toybox.System;
+import Toybox.Timer;
 import Toybox.WatchUi;
 
 class TimePickerView extends WatchUi.View {
     private var _selectedHour as Number;
     private var _selectedMinute as Number;
     private var _isHoursMode as Boolean;
+    private var _timer as Timer.Timer;
 
     function initialize() {
         View.initialize();
@@ -28,6 +30,27 @@ class TimePickerView extends WatchUi.View {
         _selectedHour = targetHour;
         _selectedMinute = targetMinute;
         _isHoursMode = true;
+        
+        // Create timer to update current time display every second
+        _timer = new Timer.Timer();
+    }
+    
+    function onShow() as Void {
+        // Start timer when view is shown
+        if (_timer != null) {
+            _timer.start(method(:onTimer), 1000, true);
+        }
+    }
+    
+    function onHide() as Void {
+        // Stop timer when view is hidden
+        if (_timer != null) {
+            _timer.stop();
+        }
+    }
+    
+    function onTimer() as Void {
+        WatchUi.requestUpdate();
     }
 
     function onUpdate(dc as Dc) as Void {
@@ -48,29 +71,31 @@ class TimePickerView extends WatchUi.View {
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         dc.drawText(width / 2, 10, Graphics.FONT_SMALL, currentTimeStr, Graphics.TEXT_JUSTIFY_CENTER);
         
-        // Display selected target time
-        var targetTimeStr = Lang.format("$1$:$2$", [
-            _selectedHour.format("%02d"),
-            _selectedMinute.format("%02d")
-        ]);
+        // Display hours and minutes side by side
+        var centerX = width / 2;
+        var centerY = height / 2;
+        var hourX = centerX - 40;
+        var minuteX = centerX + 40;
         
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, height / 2 - 20, Graphics.FONT_MEDIUM, targetTimeStr, Graphics.TEXT_JUSTIFY_CENTER);
-        
-        // Display mode indicator and current selection
-        var modeText = _isHoursMode ? "Hours" : "Minutes";
-        var valueText = _isHoursMode ? _selectedHour.toString() : _selectedMinute.toString();
-        
+        // Draw hours
+        var hourColor = _isHoursMode ? Graphics.COLOR_YELLOW : Graphics.COLOR_WHITE;
+        var hourLabel = "H";
         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, height / 2 + 20, Graphics.FONT_SMALL, modeText, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(hourX, centerY - 30, Graphics.FONT_SMALL, hourLabel, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.setColor(hourColor, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(hourX, centerY - 10, Graphics.FONT_NUMBER_HOT, _selectedHour.format("%02d"), Graphics.TEXT_JUSTIFY_CENTER);
         
-        dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, height / 2 + 40, Graphics.FONT_LARGE, valueText, Graphics.TEXT_JUSTIFY_CENTER);
-        
-        // Draw up/down indicators
+        // Draw colon separator
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, height / 2 + 70, Graphics.FONT_XTINY, "Up/Down: Change", Graphics.TEXT_JUSTIFY_CENTER);
-        dc.drawText(width / 2, height / 2 + 85, Graphics.FONT_XTINY, "Select: Next", Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(centerX, centerY - 10, Graphics.FONT_MEDIUM, ":", Graphics.TEXT_JUSTIFY_CENTER);
+        
+        // Draw minutes
+        var minuteColor = _isHoursMode ? Graphics.COLOR_WHITE : Graphics.COLOR_YELLOW;
+        var minuteLabel = "M";
+        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(minuteX, centerY - 30, Graphics.FONT_SMALL, minuteLabel, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.setColor(minuteColor, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(minuteX, centerY - 10, Graphics.FONT_NUMBER_HOT, _selectedMinute.format("%02d"), Graphics.TEXT_JUSTIFY_CENTER);
     }
     
     function getSelectedHour() as Number {

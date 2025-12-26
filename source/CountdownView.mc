@@ -66,12 +66,15 @@ class CountdownView extends WatchUi.View {
         // _targetSeconds can be > 86400 if target is tomorrow
         var targetSecondsToday = _targetSeconds % 86400;
         
+        // Calculate: current - target
+        // Negative = countdown (before start)
+        // Positive = elapsed (after start)
         if (_targetSeconds > 86400) {
             // Target is tomorrow
-            _timeDifference = _targetSeconds - currentSeconds;
+            _timeDifference = currentSeconds - _targetSeconds;
         } else {
             // Target is today
-            _timeDifference = targetSecondsToday - currentSeconds;
+            _timeDifference = currentSeconds - targetSecondsToday;
         }
         
         // Format the time difference
@@ -97,6 +100,8 @@ class CountdownView extends WatchUi.View {
         }
         
         // Set color based on countdown vs elapsed
+        // Negative = countdown (before start) = RED
+        // Positive = elapsed (after start) = GREEN
         if (_timeDifference < 0) {
             dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
         } else {

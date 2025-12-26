@@ -15,6 +15,7 @@ class TimePickerDelegate extends WatchUi.BehaviorDelegate {
             // Switch to minutes mode
             _view.setHoursMode(false);
         } else {
+            // In minutes mode, start the countdown
             // Calculate target time and push countdown view
             var targetHour = _view.getSelectedHour();
             var targetMinute = _view.getSelectedMinute();
@@ -45,6 +46,30 @@ class TimePickerDelegate extends WatchUi.BehaviorDelegate {
             _view.setHoursMode(true);
             return true;
         }
+    }
+
+    function onKey(keyEvent as WatchUi.KeyEvent) as Boolean {
+        var key = keyEvent.getKey();
+        if (key == WatchUi.KEY_UP) {
+            if (_view.isHoursMode()) {
+                _view.incrementHour();
+            } else {
+                _view.incrementMinute();
+            }
+            return true;
+        } else if (key == WatchUi.KEY_DOWN) {
+            if (_view.isHoursMode()) {
+                _view.decrementHour();
+            } else {
+                _view.decrementMinute();
+            }
+            return true;
+        } else if (key == WatchUi.KEY_ENTER) {
+            return onSelect();
+        } else if (key == WatchUi.KEY_ESC) {
+            return onBack();
+        }
+        return false;
     }
 
     function onUp() as Boolean {
