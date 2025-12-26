@@ -1,20 +1,9 @@
 #!/bin/bash
 
-# Set up Java path
-export PATH="/opt/homebrew/opt/openjdk/bin:$PATH"
-
-# Get SDK path from config
-SDK_PATH=$(cat "$HOME/Library/Application Support/Garmin/ConnectIQ/current-sdk.cfg")
-
-# Add SDK bin to PATH
-export PATH="$SDK_PATH/bin:$PATH"
-
-# Change to project directory
-cd "$(dirname "$0")"
-
-# Create bin directory if it doesn't exist
-mkdir -p bin
-
-# Build the app
-monkeyc -y ~/.garmin/developer_key -f monkey.jungle -o bin/skipperwatch.prg 
-
+java -Xms1g -Dfile.encoding=UTF-8 \
+    -Dapple.awt.UIElement=true -jar "$HOME/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-8.4.0-2025-12-03-5122605dc/bin/monkeybrains.jar" \
+    -o bin/skipperwatch.prg \
+    -f monkey.jungle \
+    -y $HOME/.garmin/developer_key \
+    -d fr245m_sim \
+    -w
