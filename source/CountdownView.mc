@@ -41,12 +41,6 @@ class CountdownView extends WatchUi.View {
     }
 
     function onUpdate(dc as Dc) as Void {
-        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
-        dc.clear();
-        
-        var width = dc.getWidth();
-        var height = dc.getHeight();
-        
         // Display current time at top
         var clockTime = System.getClockTime();
         var currentTimeStr = Lang.format("$1$:$2$:$3$", [
@@ -55,12 +49,8 @@ class CountdownView extends WatchUi.View {
             clockTime.sec.format("%02d")
         ]);
         
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, 10, Graphics.FONT_SMALL, currentTimeStr, Graphics.TEXT_JUSTIFY_CENTER);
-        
         // Calculate and display countdown/elapsed time
-        var clockTimeNow = System.getClockTime();
-        var currentSeconds = clockTimeNow.hour * 3600 + clockTimeNow.min * 60 + clockTimeNow.sec;
+        var currentSeconds = clockTime.hour * 3600 + clockTime.min * 60 + clockTime.sec;
         
         // Calculate time difference
         // _targetSeconds can be > 86400 if target is tomorrow
@@ -82,8 +72,28 @@ class CountdownView extends WatchUi.View {
         var hours = absDifference / 3600;
         var minutes = (absDifference % 3600) / 60;
         var seconds = absDifference % 60;
+
+        // Draw screen
+
+        var width = dc.getWidth();
+        var height = dc.getHeight();
+               
+        var centerX = width / 2;
+        var centerY = height / 2;
+
+        // Clear screen
+        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
+        dc.clear();
+
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(width / 2, 50, Graphics.FONT_NUMBER_MEDIUM, currentTimeStr, Graphics.TEXT_JUSTIFY_CENTER);
+ 
+        // Draw line
+        dc.drawLine(0, centerY, width, centerY);
         
         var timeStr;
+        var timeFont;
+        var timeY;
         if (hours > 0) {
             timeStr = Lang.format("$1$$2$:$3$:$4$", [
                 _timeDifference < 0 ? "-" : "+",
@@ -91,12 +101,17 @@ class CountdownView extends WatchUi.View {
                 minutes.format("%02d"),
                 seconds.format("%02d")
             ]);
+            timeFont = Graphics.FONT_NUMBER_MEDIUM;
+            timeY = centerY + 15;
+
         } else {
             timeStr = Lang.format("$1$$2$:$3$", [
                 _timeDifference < 0 ? "-" : "+",
                 minutes.format("%d"),
                 seconds.format("%02d")
             ]);
+            timeFont = Graphics.FONT_NUMBER_HOT;
+            timeY = centerY - 5;
         }
         
         // Set color based on countdown vs elapsed
@@ -109,7 +124,7 @@ class CountdownView extends WatchUi.View {
         }
         
         // Draw the countdown/elapsed time in large font
-        dc.drawText(width / 2, height / 2, Graphics.FONT_NUMBER_HOT, timeStr, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(centerX, timeY, timeFont, timeStr, Graphics.TEXT_JUSTIFY_CENTER);
     }
 
     function onTimer() as Void {
