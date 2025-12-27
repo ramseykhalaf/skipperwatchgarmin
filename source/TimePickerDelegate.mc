@@ -11,57 +11,62 @@ class TimePickerDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function onSelect() as Boolean {
-        if (_view.isHoursMode()) {
+        var currentMode = _view.getMode();
+        if (currentMode == :hours) {
             // Switch to minutes mode
-            _view.setHoursMode(false);
+            _view.setMode(:minutes);
+        } else if (currentMode == :minutes) {
+            // Switch to seconds mode
+            _view.setMode(:seconds);
+        } else if (currentMode == :seconds) {
+            // Switch to sync mode
+            _view.setMode(:sync);
         } else {
-            // In minutes mode, start the countdown
-            // Calculate target time and push countdown view
-            var targetHour = _view.getSelectedHour();
-            var targetMinute = _view.getSelectedMinute();
-            
-            // Calculate target time in seconds since midnight
-            var clockTime = System.getClockTime();
-            var targetSeconds = targetHour * 3600 + targetMinute * 60;
-            
-            // Get current time in seconds since midnight
-            var currentSeconds = clockTime.hour * 3600 + clockTime.min * 60 + clockTime.sec;
-            
-            // If target time is earlier today, assume it's for tomorrow
-            if (targetSeconds <= currentSeconds) {
-                targetSeconds += 86400; // Add 24 hours
-            }
-            
-            WatchUi.pushView(new CountdownView(targetSeconds), new CountdownDelegate(), WatchUi.SLIDE_LEFT);
+            // In sync mode, do nothing (or handle sync mode behavior later)
+            // For now, just stay in sync mode
         }
         return true;
     }
 
     function onBack() as Boolean {
-        if (_view.isHoursMode()) {
+        var currentMode = _view.getMode();
+        if (currentMode == :hours) {
             // Exit app
             return false;
-        } else {
+        } else if (currentMode == :minutes) {
             // Return to hours mode
-            _view.setHoursMode(true);
+            _view.setMode(:hours);
+            return true;
+        } else if (currentMode == :seconds) {
+            // Return to minutes mode
+            _view.setMode(:minutes);
+            return true;
+        } else {
+            // Return to seconds mode from sync mode
+            _view.setMode(:seconds);
             return true;
         }
     }
 
     function onKey(keyEvent as WatchUi.KeyEvent) as Boolean {
         var key = keyEvent.getKey();
+        var currentMode = _view.getMode();
         if (key == WatchUi.KEY_UP) {
-            if (_view.isHoursMode()) {
+            if (currentMode == :hours) {
                 _view.incrementHour();
-            } else {
+            } else if (currentMode == :minutes) {
                 _view.incrementMinute();
+            } else if (currentMode == :seconds) {
+                _view.incrementSecond();
             }
             return true;
         } else if (key == WatchUi.KEY_DOWN) {
-            if (_view.isHoursMode()) {
+            if (currentMode == :hours) {
                 _view.decrementHour();
-            } else {
+            } else if (currentMode == :minutes) {
                 _view.decrementMinute();
+            } else if (currentMode == :seconds) {
+                _view.decrementSecond();
             }
             return true;
         } else if (key == WatchUi.KEY_ENTER) {
@@ -73,19 +78,25 @@ class TimePickerDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function onUp() as Boolean {
-        if (_view.isHoursMode()) {
+        var currentMode = _view.getMode();
+        if (currentMode == :hours) {
             _view.incrementHour();
-        } else {
+        } else if (currentMode == :minutes) {
             _view.incrementMinute();
+        } else if (currentMode == :seconds) {
+            _view.incrementSecond();
         }
         return true;
     }
 
     function onDown() as Boolean {
-        if (_view.isHoursMode()) {
+        var currentMode = _view.getMode();
+        if (currentMode == :hours) {
             _view.decrementHour();
-        } else {
+        } else if (currentMode == :minutes) {
             _view.decrementMinute();
+        } else if (currentMode == :seconds) {
+            _view.decrementSecond();
         }
         return true;
     }
