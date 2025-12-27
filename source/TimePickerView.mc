@@ -59,6 +59,12 @@ class TimePickerView extends WatchUi.View {
         
         var width = dc.getWidth();
         var height = dc.getHeight();
+               
+        // Display hours and minutes side by side
+        var centerX = width / 2;
+        var centerY = height / 2;
+        var hourX = centerX - 12;
+        var minuteX = centerX + 12;
         
         // Display current time at top
         var clockTime = System.getClockTime();
@@ -69,33 +75,24 @@ class TimePickerView extends WatchUi.View {
         ]);
         
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, 10, Graphics.FONT_SMALL, currentTimeStr, Graphics.TEXT_JUSTIFY_CENTER);
-        
-        // Display hours and minutes side by side
-        var centerX = width / 2;
-        var centerY = height / 2;
-        var hourX = centerX - 40;
-        var minuteX = centerX + 40;
+        dc.drawText(width / 2, 50, Graphics.FONT_NUMBER_MEDIUM, currentTimeStr, Graphics.TEXT_JUSTIFY_CENTER);
+ 
+        // Draw line
+        dc.drawLine(0, centerY, width, centerY);
         
         // Draw hours
         var hourColor = _isHoursMode ? Graphics.COLOR_YELLOW : Graphics.COLOR_WHITE;
-        var hourLabel = "H";
-        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(hourX, centerY - 30, Graphics.FONT_SMALL, hourLabel, Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(hourColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(hourX, centerY - 10, Graphics.FONT_NUMBER_HOT, _selectedHour.format("%02d"), Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(hourX, centerY - 5, Graphics.FONT_NUMBER_HOT, _selectedHour.format("%02d"), Graphics.TEXT_JUSTIFY_RIGHT);
         
         // Draw colon separator
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(centerX, centerY - 10, Graphics.FONT_MEDIUM, ":", Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(centerX, centerY - 5, Graphics.FONT_NUMBER_HOT, ":", Graphics.TEXT_JUSTIFY_CENTER);
         
         // Draw minutes
         var minuteColor = _isHoursMode ? Graphics.COLOR_WHITE : Graphics.COLOR_YELLOW;
-        var minuteLabel = "M";
-        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(minuteX, centerY - 30, Graphics.FONT_SMALL, minuteLabel, Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(minuteColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(minuteX, centerY - 10, Graphics.FONT_NUMBER_HOT, _selectedMinute.format("%02d"), Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(minuteX, centerY - 5, Graphics.FONT_NUMBER_HOT, _selectedMinute.format("%02d"), Graphics.TEXT_JUSTIFY_LEFT);
     }
     
     function getSelectedHour() as Number {
