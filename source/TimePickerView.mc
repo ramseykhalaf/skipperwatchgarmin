@@ -5,14 +5,16 @@ import Toybox.Timer;
 import Toybox.WatchUi;
 
 class TimePickerView extends WatchUi.View {
-    private const ROW_SPACE = 10;
-    private const DIGIT_COLON_SPACE = 5;
+    private const ROW_SPACE = 15;
+    private const DIGIT_COLON_SPACE = 7;
     private const LINE_WIDTH = 5;
+    private const HIGHLIGHT_VERTICAL_SPACE = -1;
+    private const HIGHLIGHT_HORIZONTAL_SPACE = 5;
     
     private var _selectedHour as Number;
     private var _selectedMinute as Number;
     private var _selectedSecond as Number;
-    private var _mode as Symbol; // :hours, :minutes, :seconds, :sync
+    private var _mode as Symbol; // :hours, :minutes, :seconds, :countdown
     private var _timer as Timer.Timer;
     
     // Layout label references
@@ -24,15 +26,22 @@ class TimePickerView extends WatchUi.View {
     private var _secondLabel as WatchUi.Text?;
     private var _countdownLabel as WatchUi.Text?;
     
-    // Stored positions for highlight rectangles
+    // Stored positions
+    private var _width as Number;
+    private var _fontHeight as Number;
+    private var _fontWidth as Number;
+    
+    // Row 2 positions
     private var _hourX as Number;
     private var _minuteX as Number;
     private var _secondX as Number;
     private var _row2Y as Number;
-    private var _centerY as Number;
-    private var _width as Number;
-    private var _fontHeight as Number;
 
+    // Row 3 positions
+    private var _row3X as Number;
+    private var _row3Y as Number;
+    private var _countdownStr as String;
+    
     function initialize() {
         View.initialize();
         
@@ -41,9 +50,15 @@ class TimePickerView extends WatchUi.View {
         _minuteX = 0;
         _secondX = 0;
         _row2Y = 0;
-        _centerY = 0;
+
+        _row3X = 0;
+        _row3Y = 0;
+        
         _width = 0;
         _fontHeight = 0;
+        _fontWidth = 0;
+
+        _countdownStr = "";
         
         // Initialize to current time + 3 minutes
         var clockTime = System.getClockTime();
@@ -86,21 +101,6 @@ class TimePickerView extends WatchUi.View {
         WatchUi.requestUpdate();
     }
     
-    // Helper function to calculate countdown seconds
-    // Returns: positive if target is in the past (elapsed time)
-    //          negative if target is in the future (countdown)
-    function calculateCountdownSeconds(clockTime as System.ClockTime, targetHour as Number, targetMinute as Number, targetSecond as Number) as Number {
-        // Convert current time to seconds since midnight
-        var currentSeconds = clockTime.hour * 3600 + clockTime.min * 60 + clockTime.sec;
-        
-        // Convert target time to seconds since midnight
-        var targetSeconds = targetHour * 3600 + targetMinute * 60 + targetSecond;
-        
-        // Calculate time difference (current - target)
-        // Positive = target in past (elapsed time), Negative = target in future (countdown)
-        return currentSeconds - targetSeconds;
-    }
-    
     function onLayout(dc as Dc) as Void {
         setLayout(Rez.Layouts.TimePickerLayout(dc));
         
@@ -115,21 +115,17 @@ class TimePickerView extends WatchUi.View {
         
         // Get font dimensions
         _fontHeight = dc.getFontHeight(Graphics.FONT_NUMBER_MEDIUM);
-        var digitWidth = dc.getTextWidthInPixels("00", Graphics.FONT_NUMBER_MEDIUM);
+        _fontWidth = dc.getTextWidthInPixels("00", Graphics.FONT_NUMBER_MEDIUM);
+        var digitWidth = _fontWidth;
         var colonWidth = dc.getTextWidthInPixels(":", Graphics.FONT_NUMBER_MEDIUM);
         
         // Get screen dimensions
         _width = dc.getWidth();
         var height = dc.getHeight();
         var centerX = _width / 2;
-        _centerY = height / 2;
-        
-        // Calculate positions for Row 1 (top - current time)
-        var row1X = centerX;
-        var row1Y = _centerY - ROW_SPACE - _fontHeight;
-        
+   
         // Calculate positions for Row 2 (middle - time picker)
-        _row2Y = _centerY;
+        _row2Y = height / 2;
         
         // Calculate x positions for time picker elements relative to center
         // Layout: hours : minutes : seconds
@@ -150,10 +146,14 @@ class TimePickerView extends WatchUi.View {
         // Hours is to the left of colon 1
         var hourX = colon1X - (colonWidth / 2) - DIGIT_COLON_SPACE - (digitWidth / 2);
         _hourX = hourX;
-        
+
+        // Calculate positions for Row 1 (top - current time)
+        var row1X = centerX;
+        var row1Y = _row2Y - ROW_SPACE - _fontHeight;
+
         // Calculate positions for Row 3 (bottom - countdown)
-        var row3X = centerX;
-        var row3Y = _centerY + ROW_SPACE + _fontHeight;
+        _row3X = centerX;
+        _row3Y = _row2Y + ROW_SPACE + _fontHeight;
         
         // Set locations for all labels
         if (_currentTimeLabel != null) {
@@ -181,7 +181,7 @@ class TimePickerView extends WatchUi.View {
         }
         
         if (_countdownLabel != null) {
-            _countdownLabel.setLocation(row3X, row3Y);
+            _countdownLabel.setLocation(_row3X, _row3Y);
         }
     }
 
@@ -205,84 +205,44 @@ class TimePickerView extends WatchUi.View {
         // Update Row 2: Time picker labels
         if (_hourLabel != null) {
             _hourLabel.setText(_selectedHour.format("%02d"));
-            _hourLabel.setColor(_mode == :hours ? Graphics.COLOR_BLACK : Graphics.COLOR_WHITE);
         }
         
         if (_minuteLabel != null) {
             _minuteLabel.setText(_selectedMinute.format("%02d"));
-            _minuteLabel.setColor(_mode == :minutes ? Graphics.COLOR_BLACK : Graphics.COLOR_WHITE);
         }
         
         if (_secondLabel != null) {
             _secondLabel.setText(_selectedSecond.format("%02d"));
-            _secondLabel.setColor(_mode == :seconds ? Graphics.COLOR_BLACK : Graphics.COLOR_WHITE);
         }
         
         // Update Row 3: Countdown timer
+        var timeDifference = calculateCountdownSeconds(clockTime, _selectedHour, _selectedMinute, _selectedSecond);
+        // Format the time difference
+        var absDifference = timeDifference.abs();
+        var hours = absDifference / 3600;
+        var minutes = (absDifference % 3600) / 60;
+        var seconds = absDifference % 60;
+        
+        _countdownStr = Lang.format("$1$$2$$3$$4$:$5$", [
+            timeDifference < 0 ? "-" : "+",
+            hours > 0 ? hours.format("%d") : "",
+            hours > 0 ? ":" : "",
+            minutes.format("%02d"),
+            seconds.format("%02d")
+        ]);
+
         if (_countdownLabel != null) {
-            // Calculate target time in seconds since midnight
-            var targetSeconds = _selectedHour * 3600 + _selectedMinute * 60 + _selectedSecond;
-            
-            // Get current time in seconds since midnight
-            var currentSeconds = clockTime.hour * 3600 + clockTime.min * 60 + clockTime.sec;
-            
-            // If target time is earlier today, check if difference is less than 12 hours
-            // If less than 12 hours, display as positive (elapsed time)
-            // If 12 hours or more, assume it's for tomorrow (countdown)
-            if (targetSeconds <= currentSeconds) {
-                var diff = currentSeconds - targetSeconds;
-                if (diff >= 43200) { // 12 hours in seconds
-                    targetSeconds += 86400; // Add 24 hours (treat as tomorrow)
-                }
-                // Otherwise, leave targetSeconds as is, so it displays as positive elapsed time
-            }
-            
-            // Calculate time difference (current - target)
-            // Negative = countdown (before start), Positive = elapsed (after start)
-            var timeDifference = currentSeconds - targetSeconds;
-            
-            // Format the time difference
-            var absDifference = timeDifference.abs();
-            var hours = absDifference / 3600;
-            var minutes = (absDifference % 3600) / 60;
-            var seconds = absDifference % 60;
-            
-            var timeStr;
-            if (hours > 0) {
-                timeStr = Lang.format("$1$$2$:$3$:$4$", [
-                    timeDifference < 0 ? "-" : "+",
-                    hours.format("%d"),
-                    minutes.format("%02d"),
-                    seconds.format("%02d")
-                ]);
-            } else {
-                timeStr = Lang.format("$1$$2$:$3$", [
-                    timeDifference < 0 ? "-" : "+",
-                    minutes.format("%d"),
-                    seconds.format("%02d")
-                ]);
-            }
-            
-            _countdownLabel.setText(timeStr);
+            _countdownLabel.setText(_countdownStr);
         }
         
         // Render the layout first (draws labels)
         View.onUpdate(dc);
         
         // Calculate time difference to determine line color (using same logic as countdown label)
-        var targetSecondsForLines = _selectedHour * 3600 + _selectedMinute * 60 + _selectedSecond;
-        var currentSecondsForLines = clockTime.hour * 3600 + clockTime.min * 60 + clockTime.sec;
+        var timeDifferenceForLines = calculateCountdownSeconds(clockTime, _selectedHour, _selectedMinute, _selectedSecond);
         
         // If target time is earlier today, check if difference is less than 12 hours
-        if (targetSecondsForLines <= currentSecondsForLines) {
-            var diff = currentSecondsForLines - targetSecondsForLines;
-            if (diff >= 43200) { // 12 hours in seconds
-                targetSecondsForLines += 86400; // Add 24 hours (treat as tomorrow)
-            }
-        }
-        
-        var timeDifferenceForLines = currentSecondsForLines - targetSecondsForLines;
-        
+   
         // Set line color: red for countdown, green for counting up
         if (timeDifferenceForLines < 0) {
             // Counting down - RED
@@ -293,31 +253,25 @@ class TimePickerView extends WatchUi.View {
         }
         
         // Draw horizontal lines between rows at half ROW_SPACE, accounting for font height
-        var lineY1 = _centerY - (ROW_SPACE / 2) - (_fontHeight / 2) - (LINE_WIDTH / 2);
-        var lineY2 = _centerY + (ROW_SPACE / 2) + (_fontHeight / 2) - (LINE_WIDTH / 2);
+        var lineY1 = _row2Y - (ROW_SPACE / 2) - (_fontHeight / 2) - (LINE_WIDTH / 2);
+        var lineY2 = _row2Y + (ROW_SPACE / 2) + (_fontHeight / 2) - (LINE_WIDTH / 2);
         dc.fillRectangle(0, lineY1, _width, LINE_WIDTH);
         dc.fillRectangle(0, lineY2, _width, LINE_WIDTH);
         
-        // Draw yellow highlight rectangles for active field on top (custom drawing)
-        var highlightHeight = _fontHeight;
-        var highlightWidth = 45;
+        // Draw white outline boxes for active field on top (custom drawing)
+        var highlightHeight = _fontHeight + (HIGHLIGHT_VERTICAL_SPACE * 2);
+        var highlightWidth = _fontWidth + (HIGHLIGHT_HORIZONTAL_SPACE * 2);
         var highlightY = _row2Y - (highlightHeight / 2);
         
         if (_mode == :hours && _hourLabel != null) {
-            dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_YELLOW);
-            dc.fillRectangle(_hourX - (highlightWidth / 2), highlightY, highlightWidth, highlightHeight);
-            // Redraw the hour label on top of the highlight
-            _hourLabel.draw(dc);
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+            dc.drawRectangle(_hourX - (highlightWidth / 2), highlightY, highlightWidth, highlightHeight);
         } else if (_mode == :minutes && _minuteLabel != null) {
-            dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_YELLOW);
-            dc.fillRectangle(_minuteX - (highlightWidth / 2), highlightY, highlightWidth, highlightHeight);
-            // Redraw the minute label on top of the highlight
-            _minuteLabel.draw(dc);
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+            dc.drawRectangle(_minuteX - (highlightWidth / 2), highlightY, highlightWidth, highlightHeight);
         } else if (_mode == :seconds && _secondLabel != null) {
-            dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_YELLOW);
-            dc.fillRectangle(_secondX - (highlightWidth / 2), highlightY, highlightWidth, highlightHeight);
-            // Redraw the second label on top of the highlight
-            _secondLabel.draw(dc);
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+            dc.drawRectangle(_secondX - (highlightWidth / 2), highlightY, highlightWidth, highlightHeight);
         }
     }
     
@@ -390,6 +344,21 @@ class TimePickerView extends WatchUi.View {
         } else {
             WatchUi.requestUpdate();
         }
+    }
+
+    // Helper function to calculate countdown seconds
+    // Returns: positive if target is in the past (elapsed time)
+    //          negative if target is in the future (countdown)
+    function calculateCountdownSeconds(clockTime as System.ClockTime, targetHour as Number, targetMinute as Number, targetSecond as Number) as Number {
+        // Convert current time to seconds since midnight
+        var currentSeconds = clockTime.hour * 3600 + clockTime.min * 60 + clockTime.sec;
+        
+        // Convert target time to seconds since midnight
+        var targetSeconds = targetHour * 3600 + targetMinute * 60 + targetSecond;
+        
+        // Calculate time difference (current - target)
+        // Positive = target in past (elapsed time), Negative = target in future (countdown)
+        return currentSeconds - targetSeconds;
     }
 }
 
