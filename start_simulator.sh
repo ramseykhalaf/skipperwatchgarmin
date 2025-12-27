@@ -16,7 +16,7 @@ cd "$(dirname "$0")"
 open "$SDK_PATH/bin/ConnectIQ.app"
 
 # Wait for simulator to start
-sleep 3
+sleep 5
 
 # If a device ID is provided as argument, load the app
 if [ -n "$1" ]; then
