@@ -86,11 +86,19 @@ class CountdownView extends WatchUi.View {
         dc.clear();
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, 50, Graphics.FONT_NUMBER_MEDIUM, currentTimeStr, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(width / 2, 40, Graphics.FONT_NUMBER_MEDIUM, currentTimeStr, Graphics.TEXT_JUSTIFY_CENTER);
  
-        // Draw line
-        dc.drawLine(0, centerY, width, centerY);
-        
+        // Draw rectangle - red for countdown, green for elapsed
+        if (_timeDifference < 0) {
+            // Countdown (before start) - RED
+            dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_RED);
+        } else {
+            // Elapsed (after start) - GREEN
+            dc.setColor(Graphics.COLOR_GREEN, Graphics.COLOR_GREEN);
+        }
+        // Draw 5 pixel high rectangle centered at centerY
+        dc.fillRectangle(0, centerY - 15, width, 15);
+
         var timeStr;
         var timeFont;
         var timeY;
@@ -114,16 +122,8 @@ class CountdownView extends WatchUi.View {
             timeY = centerY - 5;
         }
         
-        // Set color based on countdown vs elapsed
-        // Negative = countdown (before start) = RED
-        // Positive = elapsed (after start) = GREEN
-        if (_timeDifference < 0) {
-            dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
-        } else {
-            dc.setColor(Graphics.COLOR_GREEN, Graphics.COLOR_TRANSPARENT);
-        }
-        
         // Draw the countdown/elapsed time in large font
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         dc.drawText(centerX, timeY, timeFont, timeStr, Graphics.TEXT_JUSTIFY_CENTER);
     }
 

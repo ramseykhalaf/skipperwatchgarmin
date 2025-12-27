@@ -75,11 +75,13 @@ class TimePickerView extends WatchUi.View {
         ]);
         
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, 50, Graphics.FONT_NUMBER_MEDIUM, currentTimeStr, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(width / 2, 40, Graphics.FONT_NUMBER_MEDIUM, currentTimeStr, Graphics.TEXT_JUSTIFY_CENTER);
  
         // Draw line
-        dc.drawLine(0, centerY, width, centerY);
-        
+        dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
+        dc.fillRectangle(0, centerY - 15, width, 15);
+
+
         // Draw hours
         var hourColor = _isHoursMode ? Graphics.COLOR_YELLOW : Graphics.COLOR_WHITE;
         dc.setColor(hourColor, Graphics.COLOR_TRANSPARENT);
