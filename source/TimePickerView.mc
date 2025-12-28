@@ -238,13 +238,8 @@ class TimePickerView extends WatchUi.View {
         // Render the layout first (draws labels)
         View.onUpdate(dc);
         
-        // Calculate time difference to determine line color (using same logic as countdown label)
-        var timeDifferenceForLines = calculateCountdownSeconds(clockTime, _selectedHour, _selectedMinute, _selectedSecond);
-        
-        // If target time is earlier today, check if difference is less than 12 hours
-   
         // Set line color: red for countdown, green for counting up
-        if (timeDifferenceForLines < 0) {
+        if (timeDifference < 0) {
             // Counting down - RED
             dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_RED);
         } else {
@@ -395,6 +390,16 @@ class TimePickerView extends WatchUi.View {
         // Calculate time difference (current - target)
         // Positive = target in past (elapsed time), Negative = target in future (countdown)
         return currentSeconds - targetSeconds;
+    }
+
+    function snapToTime(
+        currentHour as Number, currentMinute as Number, currentSecond as Number,
+        countdownHour as Number, countdownMinute as Number, countdownSecond as Number) as Dictionary {
+        return {
+            :hour => 0,
+            :minute => 0,
+            :second => 0
+        };
     }
 }
 
