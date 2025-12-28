@@ -6,24 +6,24 @@ import Toybox.Test;
 class TimePickerViewTest {
 
     (:test)
-    function testSnapToTimeZero(logger as Logger) as Boolean {
-        var result = TimePickerView.calculateTargetTimeToSnapCountdownSecondsToZero(11,22,33,0,5,0);
+    function testSnapNegativeCountdownDoNothing(logger as Logger) as Boolean {
+        var result = TimePickerView.calculateTargetTimeToSnapCountdownSecondsToZero(11, 22, 33, -300);
         return result[:hour] == 11 && 
                result[:minute] == 27 && 
                result[:second] == 33;
     }
 
     (:test)
-    function testSnapToTimeRoundDown(logger as Logger) as Boolean {
-        var result = TimePickerView.calculateTargetTimeToSnapCountdownSecondsToZero(11,22,33,0,5,10);
+    function testSnapNegativeCountdownRoundDown10(logger as Logger) as Boolean {
+        var result = TimePickerView.calculateTargetTimeToSnapCountdownSecondsToZero(11, 22, 33, -310);
         return result[:hour] == 11 && 
                result[:minute] == 27 && 
                result[:second] == 33;
     }
 
     (:test)
-    function testSnapToTimeRoundDown29(logger as Logger) as Boolean {
-        var result = TimePickerView.calculateTargetTimeToSnapCountdownSecondsToZero(11,22,33,0,5,29);
+    function testSnapNegativeCountdownRoundDown29(logger as Logger) as Boolean {
+        var result = TimePickerView.calculateTargetTimeToSnapCountdownSecondsToZero(11, 22, 33, -329);
         return result[:hour] == 11 && 
                result[:minute] == 27 && 
                result[:second] == 33;
@@ -31,10 +31,35 @@ class TimePickerViewTest {
 
 
     (:test)
-    function testSnapToTimeRoundUp30(logger as Logger) as Boolean {
-        var result = TimePickerView.calculateTargetTimeToSnapCountdownSecondsToZero(11,22,33,0,4,30);
+    function testSnapNegativeCountdownRoundUp10(logger as Logger) as Boolean {
+        var result = TimePickerView.calculateTargetTimeToSnapCountdownSecondsToZero(11, 22, 33, -290);
         return result[:hour] == 11 && 
                result[:minute] == 27 && 
+               result[:second] == 33;
+    }
+
+    (:test)
+    function testSnapNegativeCountdownRoundUp30(logger as Logger) as Boolean {
+        var result = TimePickerView.calculateTargetTimeToSnapCountdownSecondsToZero(11, 22, 33, -270);
+        return result[:hour] == 11 && 
+               result[:minute] == 27 && 
+               result[:second] == 33;
+    }
+
+
+    (:test)
+    function testSnapPositiveCountdownRoundDown29(logger as Logger) as Boolean {
+        var result = TimePickerView.calculateTargetTimeToSnapCountdownSecondsToZero(11, 22, 33, 329);
+        return result[:hour] == 11 && 
+               result[:minute] == 17 && 
+               result[:second] == 33;
+    }
+
+    (:test)
+    function testSnapPositiveCountdownRoundUp30(logger as Logger) as Boolean {
+        var result = TimePickerView.calculateTargetTimeToSnapCountdownSecondsToZero(11, 22, 33, -270);
+        return result[:hour] == 11 && 
+               result[:minute] == 17 && 
                result[:second] == 33;
     }
 }
