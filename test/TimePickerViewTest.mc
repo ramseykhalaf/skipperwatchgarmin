@@ -57,7 +57,7 @@ class TimePickerViewTest {
 
     (:test)
     function testSnapPositiveCountdownRoundUp30(logger as Logger) as Boolean {
-        var result = TimePickerView.calculateTargetTimeToSnapCountdownSecondsToZero(11, 22, 33, -270);
+        var result = TimePickerView.calculateTargetTimeToSnapCountdownSecondsToZero(11, 22, 33, 270);
         return result[:hour] == 11 && 
                result[:minute] == 17 && 
                result[:second] == 33;

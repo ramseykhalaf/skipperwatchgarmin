@@ -361,19 +361,17 @@ class TimePickerView extends WatchUi.View {
         var clockTime = System.getClockTime();
         
         // Calculate current countdown
-        var timeDifference = calculateCountdownSeconds(clockTime, _targetHour, _targetMinute, _targetSecond);
-        var absDifference = timeDifference.abs();
-        var seconds = absDifference % 60;
+        var countdownSeconds = calculateCountdownSeconds(clockTime, _targetHour, _targetMinute, _targetSecond);
         
-        // If seconds >= 30, round up (add 1 minute to target time)
-        // If seconds < 30, round down (keep current minute)
-        if (seconds >= 30) {
-            // Round up - add 1 minute to target time
-            incrementMinute();
-        }
+        // Use the static helper to calculate the snapped target time
+        var snappedTime = calculateTargetTimeToSnapCountdownSecondsToZero(
+            clockTime.hour, clockTime.min, clockTime.sec, countdownSeconds);
         
-        // Set selected seconds to current time's seconds to snap to whole minutes
-        _targetSecond = clockTime.sec;
+        // Update target time to the snapped values
+        _targetHour = snappedTime[:hour];
+        _targetMinute = snappedTime[:minute];
+        _targetSecond = snappedTime[:second];
+        
         WatchUi.requestUpdate();
     }
 
@@ -390,30 +388,34 @@ class TimePickerView extends WatchUi.View {
     }
 
     static function calculateTargetTimeToSnapCountdownSecondsToZero(
-        currentHour as Number, currentMinute as Number, currentSecond as Number,
-        countdownHour as Number, countdownMinute as Number, countdownSecond as Number) as Dictionary {
+        clockHour as Number, clockMinute as Number, clockSecond as Number, countdownSeconds as Number) as Dictionary {
         
-        // Snap the target time so that result seconds = currentSecond
-        // This aligns the countdown cleanly with the current time's seconds
-        // Round countdown seconds: if >= 30, add an extra minute
+        // Convert current time to total seconds since midnight
+        var currentTotalSeconds = clockHour * 3600 + clockMinute * 60 + clockSecond;
         
-        var targetSecond = currentSecond;
+        // Extract the seconds component from countdown and round to nearest minute
+        var absCountdownSeconds = countdownSeconds.abs();
+        var countdownSecondComponent = absCountdownSeconds % 60;
+        var roundUpMinute = (countdownSecondComponent >= 30) ? 1 : 0;
         
-        // Round up: if countdown seconds >= 30, add an extra minute
-        var roundUpMinute = (countdownSecond >= 30) ? 1 : 0;
+        // Calculate rounded countdown in total seconds
+        var roundedCountdownMinutes = (absCountdownSeconds / 60) + roundUpMinute;
+        var roundedCountdown = (countdownSeconds < 0 ? -1 : 1) * roundedCountdownMinutes * 60;
         
-        // Add countdown minutes plus rounding
-        var targetMinute = currentMinute + countdownMinute + roundUpMinute;
-        var targetHour = currentHour + countdownHour;
+        // Calculate target time: currentTime - countdown
+        // (negative countdown means target in future, so we add)
+        var targetTotalSeconds = currentTotalSeconds - roundedCountdown;
         
-        // Handle overflow for minutes
-        if (targetMinute >= 60) {
-            targetHour += targetMinute / 60;
-            targetMinute = targetMinute % 60;
+        // Handle wrapping (ensure positive and within 24 hours)
+        while (targetTotalSeconds < 0) {
+            targetTotalSeconds += 86400; // 24 hours in seconds
         }
+        targetTotalSeconds = targetTotalSeconds % 86400;
         
-        // Handle overflow for hours (wrap at 24)
-        targetHour = targetHour % 24;
+        // Convert back to hours, minutes, seconds
+        var targetHour = targetTotalSeconds / 3600;
+        var targetMinute = (targetTotalSeconds % 3600) / 60;
+        var targetSecond = targetTotalSeconds % 60;
         
         return {
             :hour => targetHour,
