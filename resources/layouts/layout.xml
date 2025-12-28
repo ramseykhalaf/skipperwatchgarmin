@@ -1,14 +1,12 @@
 <layout id="TimePickerLayout" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://developer.garmin.com/downloads/connect-iq/resources.xsd">
-    <!-- Row 1: Current system time -->
     <label id="currentTimeLabel" text="00:00:00" color="Graphics.COLOR_WHITE" justification="Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER" font="Graphics.FONT_NUMBER_MEDIUM" />
     
-    <!-- Row 2: Time picker (hours:minutes:seconds) -->
+    <label id="countdownLabel" text="-00:00" color="Graphics.COLOR_WHITE" justification="Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER" font="Graphics.FONT_NUMBER_MEDIUM" />
+    
     <label id="hourLabel" text="00" color="Graphics.COLOR_WHITE" justification="Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER" font="Graphics.FONT_NUMBER_MEDIUM" />
     <label id="colon1Label" text=":" color="Graphics.COLOR_WHITE" justification="Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER" font="Graphics.FONT_NUMBER_MEDIUM" />
     <label id="minuteLabel" text="00" color="Graphics.COLOR_WHITE" justification="Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER" font="Graphics.FONT_NUMBER_MEDIUM" />
     <label id="colon2Label" text=":" color="Graphics.COLOR_WHITE" justification="Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER" font="Graphics.FONT_NUMBER_MEDIUM" />
     <label id="secondLabel" text="00" color="Graphics.COLOR_WHITE" justification="Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER" font="Graphics.FONT_NUMBER_MEDIUM" />
-    
-    <!-- Row 3: Countdown timer -->
-    <label id="countdownLabel" text="-00:00" color="Graphics.COLOR_WHITE" justification="Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER" font="Graphics.FONT_NUMBER_MEDIUM" />
+
 </layout>
