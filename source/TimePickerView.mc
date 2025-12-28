@@ -5,17 +5,18 @@ import Toybox.Timer;
 import Toybox.WatchUi;
 
 class TimePickerView extends WatchUi.View {
-    private const ROW_SPACE = 15;
+    private const ROW_SPACE = 0;
     private const DIGIT_COLON_SPACE = 2;
-    private const LINE_screenWIDTH = 5;
-    private const HIGHLIGHT_VERTICAL_SPACE = -5;
-    private const HIGHLIGHT_HORIZONTAL_SPACE = 2;
+    private const LINE_WIDTH = 6;
+    private const HIGHLIGHT_VERTICAL_SPACE = 0;
+    private const HIGHLIGHT_HORIZONTAL_SPACE = 0;
 
     private const CLOCK_FONT_SIZE = Graphics.FONT_NUMBER_MEDIUM;
     private const COUNTDOWN_MINUTES_FONT_SIZE = Graphics.FONT_NUMBER_THAI_HOT;
     private const COUNTDOWN_HOURS_FONT_SIZE = Graphics.FONT_NUMBER_HOT;
     private const TARGET_FONT_SIZE = Graphics.FONT_NUMBER_MEDIUM;
     
+    // Target time properties
     private var _targetHour as Number;
     private var _targetMinute as Number;
     private var _targetSecond as Number;
@@ -39,11 +40,12 @@ class TimePickerView extends WatchUi.View {
     private var _hourX as Number;
     private var _minuteX as Number;
     private var _secondX as Number;
-    private var _targetTimeY as Number;
+    private var _row3Y as Number;
 
     // Countdown positions
-    private var _countdownX as Number;
-    private var _countdownY as Number;
+    private var _centerX as Number;
+    private var _row2X as Number;
+    private var _row2Y as Number;
     private var _countdownStr as String;
     
     function initialize() {
@@ -53,10 +55,11 @@ class TimePickerView extends WatchUi.View {
         _hourX = 0;
         _minuteX = 0;
         _secondX = 0;
-        _targetTimeY = 0;
+        _row3Y = 0;
 
-        _countdownX = 0;
-        _countdownY = 0;
+        _centerX = 0;
+        _row2X = 0;
+        _row2Y = 0;
         
         _screenWidth = 0;
         
@@ -126,15 +129,16 @@ class TimePickerView extends WatchUi.View {
         // Get screen dimensions
         _screenWidth = dc.getWidth();
         var height = dc.getHeight();
-        var centerX = _screenWidth / 2;
+        _centerX = _screenWidth / 2;
    
-        // Calculate positions for Row 2 (middle - countdown)
-        _countdownY = height / 2;
+        // Calculate positions for Row 2
+        _row2Y = height / 2;
+        _row2X = _centerX;
         
         // Calculate x positions for time picker elements relative to center
         // Layout: hours : minutes : seconds
         // Minutes is at center, so we calculate offsets from center
-        var minutesX = centerX;
+        var minutesX = _centerX;
         _minuteX = minutesX;
         
         // Colon 2 is to the right of minutes
@@ -151,9 +155,7 @@ class TimePickerView extends WatchUi.View {
         var hourX = colon1X - (_targetColonFontWidth / 2) - DIGIT_COLON_SPACE - (_targetDoubleDigitFontWidth / 2);
         _hourX = hourX;
 
-        // Calculate positions for Row 3 (bottom - time picker)
-        _countdownX = centerX;
-        _targetTimeY = _countdownY + ROW_SPACE + _targetFontHeight;
+        _row3Y = _row2Y + _countdownMinutesFontHeight/2 + ROW_SPACE + _targetFontHeight/2;
     }
 
     function onUpdate(dc as Dc) as Void {
@@ -164,13 +166,12 @@ class TimePickerView extends WatchUi.View {
         var clockTime = System.getClockTime();
         
         // Calculate positions for Row 1 (top - current time)
-        var row1X = _screenWidth / 2;
-        var row1Y = _countdownY - ROW_SPACE - _clockFontHeight;
+        var row1Y = _row2Y - _countdownMinutesFontHeight/2 - ROW_SPACE - _clockFontHeight/2;
         
         // Draw Row 1: Current system time
-        drawClockTime(dc, clockTime, row1X, row1Y);
+        drawClockTime(dc, clockTime, _centerX, row1Y);
         
-        // Update Row 2: Countdown timer
+        // Draw Row 2: Countdown timer
         var timeDifference = calculateCountdownSeconds(clockTime, _targetHour, _targetMinute, _targetSecond);
         // Set countdown font height and size once based on whether hours are present
         var absDifference = timeDifference.abs();
@@ -182,16 +183,14 @@ class TimePickerView extends WatchUi.View {
             _countdownFontHeight = _countdownMinutesFontHeight;
             _countdownFontSize = COUNTDOWN_MINUTES_FONT_SIZE;
         }
-        drawCountdownTimer(dc, timeDifference, _countdownX, _countdownY);
+        drawCountdownTimer(dc, timeDifference, _row2X, _row2Y);
 
         // Draw Row 3: Time picker
-        var centerX = _screenWidth / 2;
-        drawTargetTime(dc, _targetHour, _targetMinute, _targetSecond, centerX, _targetTimeY);
-        
+        drawTargetTime(dc, _targetHour, _targetMinute, _targetSecond, _centerX, _row3Y);
         
         // Draw horizontal lines between rows at half ROW_SPACE, accounting for font height
-        var lineY1 = _countdownY - (ROW_SPACE / 2) - (_countdownFontHeight / 2) - (LINE_screenWIDTH / 2);
-        var lineY2 = _countdownY + (ROW_SPACE / 2) + (_countdownFontHeight / 2) - (LINE_screenWIDTH / 2);
+        var lineY1 = _row2Y - _countdownMinutesFontHeight/2 - ROW_SPACE/2;
+        var lineY2 = _row2Y + _countdownMinutesFontHeight/2 - ROW_SPACE/2;
         drawDividers(dc, timeDifference, lineY1, lineY2);
         
         // Draw white outline boxes for active field on top (custom drawing)
@@ -201,7 +200,7 @@ class TimePickerView extends WatchUi.View {
     function drawSelectorHighlight(dc as Dc) as Void {
         var targetHighlightHeight = _targetFontHeight + (HIGHLIGHT_VERTICAL_SPACE * 2);
         var targetHighlightWidth = _targetDoubleDigitFontWidth + (HIGHLIGHT_HORIZONTAL_SPACE * 2);
-        var highlightY = _targetTimeY - (targetHighlightHeight / 2);
+        var highlightY = _row3Y - (targetHighlightHeight / 2);
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
 
@@ -215,8 +214,8 @@ class TimePickerView extends WatchUi.View {
 
             var countdownHighlightHeight = _countdownFontHeight + (HIGHLIGHT_VERTICAL_SPACE * 2);
             var countdownHighlightWidth = dc.getTextWidthInPixels(_countdownStr, _countdownFontSize) + (HIGHLIGHT_HORIZONTAL_SPACE * 2);
-            var countdownHighlightY = _countdownY - (countdownHighlightHeight / 2);
-            dc.drawRectangle(_countdownX - (countdownHighlightWidth / 2), countdownHighlightY, countdownHighlightWidth, countdownHighlightHeight);
+            var countdownHighlightY = _row2Y - (countdownHighlightHeight / 2);
+            dc.drawRectangle(_row2X - (countdownHighlightWidth / 2), countdownHighlightY, countdownHighlightWidth, countdownHighlightHeight);
         }
     }
     
@@ -282,8 +281,8 @@ class TimePickerView extends WatchUi.View {
         }
         
         // Draw horizontal lines between rows
-        dc.fillRectangle(0, divider1Y, _screenWidth, LINE_screenWIDTH);
-        dc.fillRectangle(0, divider2Y, _screenWidth, LINE_screenWIDTH);
+        dc.fillRectangle(0, divider1Y - LINE_WIDTH/2, _screenWidth, LINE_WIDTH);
+        dc.fillRectangle(0, divider2Y - LINE_WIDTH/2, _screenWidth, LINE_WIDTH);
     }
     
     function getSelectedHour() as Number {
