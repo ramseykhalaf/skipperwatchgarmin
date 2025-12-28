@@ -17,15 +17,6 @@ class TimePickerView extends WatchUi.View {
     private var _mode as Symbol; // :hours, :minutes, :seconds, :countdown
     private var _timer as Timer.Timer;
     
-    // Layout label references
-    private var _currentTimeLabel as WatchUi.Text?;
-    private var _hourLabel as WatchUi.Text?;
-    private var _colon1Label as WatchUi.Text?;
-    private var _minuteLabel as WatchUi.Text?;
-    private var _colon2Label as WatchUi.Text?;
-    private var _secondLabel as WatchUi.Text?;
-    private var _countdownLabel as WatchUi.Text?;
-    
     // Stored positions
     private var _width as Number;
     private var _fontHeight as Number;
@@ -102,17 +93,6 @@ class TimePickerView extends WatchUi.View {
     }
     
     function onLayout(dc as Dc) as Void {
-        setLayout(Rez.Layouts.TimePickerLayout(dc));
-        
-        // Get references to layout labels
-        _currentTimeLabel = findDrawableById("currentTimeLabel") as WatchUi.Text;
-        _hourLabel = findDrawableById("hourLabel") as WatchUi.Text;
-        _colon1Label = findDrawableById("colon1Label") as WatchUi.Text;
-        _minuteLabel = findDrawableById("minuteLabel") as WatchUi.Text;
-        _colon2Label = findDrawableById("colon2Label") as WatchUi.Text;
-        _secondLabel = findDrawableById("secondLabel") as WatchUi.Text;
-        _countdownLabel = findDrawableById("countdownLabel") as WatchUi.Text;
-        
         // Get font dimensions
         _fontHeight = dc.getFontHeight(Graphics.FONT_NUMBER_MEDIUM);
         _fontWidth = dc.getTextWidthInPixels("00", Graphics.FONT_NUMBER_MEDIUM);
@@ -147,42 +127,9 @@ class TimePickerView extends WatchUi.View {
         var hourX = colon1X - (colonWidth / 2) - DIGIT_COLON_SPACE - (digitWidth / 2);
         _hourX = hourX;
 
-        // Calculate positions for Row 1 (top - current time)
-        var row1X = centerX;
-        var row1Y = _countdownY - ROW_SPACE - _fontHeight;
-
         // Calculate positions for Row 3 (bottom - time picker)
         _countdownX = centerX;
         _timePickerY = _countdownY + ROW_SPACE + _fontHeight;
-        
-        // Set locations for all labels
-        if (_currentTimeLabel != null) {
-            _currentTimeLabel.setLocation(row1X, row1Y);
-        }
-        
-        if (_hourLabel != null) {
-            _hourLabel.setLocation(hourX, _timePickerY);
-        }
-        
-        if (_colon1Label != null) {
-            _colon1Label.setLocation(colon1X, _timePickerY);
-        }
-        
-        if (_minuteLabel != null) {
-            _minuteLabel.setLocation(minutesX, _timePickerY);
-        }
-        
-        if (_colon2Label != null) {
-            _colon2Label.setLocation(colon2X, _timePickerY);
-        }
-        
-        if (_secondLabel != null) {
-            _secondLabel.setLocation(secondX, _timePickerY);
-        }
-        
-        if (_countdownLabel != null) {
-            _countdownLabel.setLocation(_countdownX, _countdownY);
-        }
     }
 
     function onUpdate(dc as Dc) as Void {
@@ -192,30 +139,36 @@ class TimePickerView extends WatchUi.View {
         
         var clockTime = System.getClockTime();
         
-        // Update Row 1: Current system time
-        if (_currentTimeLabel != null) {
-            var currentTimeStr = Lang.format("$1$:$2$:$3$", [
-                clockTime.hour.format("%02d"),
-                clockTime.min.format("%02d"),
-                clockTime.sec.format("%02d")
-            ]);
-            _currentTimeLabel.setText(currentTimeStr);
-        }
+        // Calculate positions for Row 1 (top - current time)
+        var row1X = _width / 2;
+        var row1Y = _countdownY - ROW_SPACE - _fontHeight;
         
-        // Update Row 2: Time picker labels
-        if (_hourLabel != null) {
-            _hourLabel.setText(_targetHour.format("%02d"));
-        }
+        // Draw Row 1: Current system time
+        var currentTimeStr = Lang.format("$1$:$2$:$3$", [
+            clockTime.hour.format("%02d"),
+            clockTime.min.format("%02d"),
+            clockTime.sec.format("%02d")
+        ]);
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(row1X, row1Y, Graphics.FONT_NUMBER_MEDIUM, currentTimeStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         
-        if (_minuteLabel != null) {
-            _minuteLabel.setText(_targetMinute.format("%02d"));
-        }
+        // Calculate colon positions (needed for drawing)
+        var centerX = _width / 2;
+        var digitWidth = _fontWidth;
+        var colonWidth = dc.getTextWidthInPixels(":", Graphics.FONT_NUMBER_MEDIUM);
+        var minutesX = centerX;
+        var colon2X = minutesX + (digitWidth / 2) + DIGIT_COLON_SPACE + (colonWidth / 2);
+        var colon1X = minutesX - (digitWidth / 2) - DIGIT_COLON_SPACE - (colonWidth / 2);
         
-        if (_secondLabel != null) {
-            _secondLabel.setText(_targetSecond.format("%02d"));
-        }
+        // Draw Row 3: Time picker (using stored positions)
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(_hourX, _timePickerY, Graphics.FONT_NUMBER_MEDIUM, _targetHour.format("%02d"), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.drawText(colon1X, _timePickerY, Graphics.FONT_NUMBER_MEDIUM, ":", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.drawText(_minuteX, _timePickerY, Graphics.FONT_NUMBER_MEDIUM, _targetMinute.format("%02d"), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.drawText(colon2X, _timePickerY, Graphics.FONT_NUMBER_MEDIUM, ":", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.drawText(_secondX, _timePickerY, Graphics.FONT_NUMBER_MEDIUM, _targetSecond.format("%02d"), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         
-        // Update Row 3: Countdown timer
+        // Update Row 2: Countdown timer
         var timeDifference = calculateCountdownSeconds(clockTime, _targetHour, _targetMinute, _targetSecond);
         // Format the time difference
         var absDifference = timeDifference.abs();
@@ -231,12 +184,9 @@ class TimePickerView extends WatchUi.View {
             seconds.format("%02d")
         ]);
 
-        if (_countdownLabel != null) {
-            _countdownLabel.setText(_countdownStr);
-        }
-        
-        // Render the layout first (draws labels)
-        View.onUpdate(dc);
+        // Draw Row 2: Countdown timer
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(_countdownX, _countdownY, Graphics.FONT_NUMBER_HOT, _countdownStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         
         // Set line color: red for countdown, green for counting up
         if (timeDifference < 0) {
@@ -258,18 +208,18 @@ class TimePickerView extends WatchUi.View {
         var highlightWidth = _fontWidth + (HIGHLIGHT_HORIZONTAL_SPACE * 2);
         var highlightY = _timePickerY - (highlightHeight / 2);
         
-        if (_mode == :hours && _hourLabel != null) {
+        if (_mode == :hours) {
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
             dc.drawRectangle(_hourX - (highlightWidth / 2), highlightY, highlightWidth, highlightHeight);
-        } else if (_mode == :minutes && _minuteLabel != null) {
+        } else if (_mode == :minutes) {
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
             dc.drawRectangle(_minuteX - (highlightWidth / 2), highlightY, highlightWidth, highlightHeight);
-        } else if (_mode == :seconds && _secondLabel != null) {
+        } else if (_mode == :seconds) {
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
             dc.drawRectangle(_secondX - (highlightWidth / 2), highlightY, highlightWidth, highlightHeight);
-        } else if (_mode == :countdown && _countdownLabel != null) {
+        } else if (_mode == :countdown) {
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-            var countdownWidth = dc.getTextWidthInPixels(_countdownStr, Graphics.FONT_NUMBER_MEDIUM) + (HIGHLIGHT_HORIZONTAL_SPACE * 2);
+            var countdownWidth = dc.getTextWidthInPixels(_countdownStr, Graphics.FONT_NUMBER_HOT) + (HIGHLIGHT_HORIZONTAL_SPACE * 2);
             var countdownHighlightY = _countdownY - (highlightHeight / 2);
             dc.drawRectangle(_countdownX - (countdownWidth / 2), countdownHighlightY, countdownWidth, highlightHeight);
         }
