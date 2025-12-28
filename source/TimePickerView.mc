@@ -11,9 +11,9 @@ class TimePickerView extends WatchUi.View {
     private const HIGHLIGHT_VERTICAL_SPACE = -2;
     private const HIGHLIGHT_HORIZONTAL_SPACE = 3;
     
-    private var _selectedHour as Number;
-    private var _selectedMinute as Number;
-    private var _selectedSecond as Number;
+    private var _targetHour as Number;
+    private var _targetMinute as Number;
+    private var _targetSecond as Number;
     private var _mode as Symbol; // :hours, :minutes, :seconds, :countdown
     private var _timer as Timer.Timer;
     
@@ -74,9 +74,9 @@ class TimePickerView extends WatchUi.View {
             targetHour = (targetHour + 1) % 24;
         }
         
-        _selectedHour = targetHour;
-        _selectedMinute = targetMinute;
-        _selectedSecond = 0;
+        _targetHour = targetHour;
+        _targetMinute = targetMinute;
+        _targetSecond = 0;
         _mode = :minutes;
         
         // Create timer to update current time display every second
@@ -204,19 +204,19 @@ class TimePickerView extends WatchUi.View {
         
         // Update Row 2: Time picker labels
         if (_hourLabel != null) {
-            _hourLabel.setText(_selectedHour.format("%02d"));
+            _hourLabel.setText(_targetHour.format("%02d"));
         }
         
         if (_minuteLabel != null) {
-            _minuteLabel.setText(_selectedMinute.format("%02d"));
+            _minuteLabel.setText(_targetMinute.format("%02d"));
         }
         
         if (_secondLabel != null) {
-            _secondLabel.setText(_selectedSecond.format("%02d"));
+            _secondLabel.setText(_targetSecond.format("%02d"));
         }
         
         // Update Row 3: Countdown timer
-        var timeDifference = calculateCountdownSeconds(clockTime, _selectedHour, _selectedMinute, _selectedSecond);
+        var timeDifference = calculateCountdownSeconds(clockTime, _targetHour, _targetMinute, _targetSecond);
         // Format the time difference
         var absDifference = timeDifference.abs();
         var hours = absDifference / 3600;
@@ -276,15 +276,15 @@ class TimePickerView extends WatchUi.View {
     }
     
     function getSelectedHour() as Number {
-        return _selectedHour;
+        return _targetHour;
     }
     
     function getSelectedMinute() as Number {
-        return _selectedMinute;
+        return _targetMinute;
     }
     
     function getSelectedSecond() as Number {
-        return _selectedSecond;
+        return _targetSecond;
     }
     
     function getMode() as Symbol {
@@ -297,19 +297,19 @@ class TimePickerView extends WatchUi.View {
     }
     
     function incrementHour() as Void {
-        _selectedHour = (_selectedHour + 1) % 24;
+        _targetHour = (_targetHour + 1) % 24;
         WatchUi.requestUpdate();
     }
     
     function decrementHour() as Void {
-        _selectedHour = (_selectedHour - 1 + 24) % 24;
+        _targetHour = (_targetHour - 1 + 24) % 24;
         WatchUi.requestUpdate();
     }
     
     function incrementMinute() as Void {
-        _selectedMinute = _selectedMinute + 1;
-        if (_selectedMinute >= 60) {
-            _selectedMinute = 0;
+        _targetMinute = _targetMinute + 1;
+        if (_targetMinute >= 60) {
+            _targetMinute = 0;
             incrementHour();
         } else {
             WatchUi.requestUpdate();
@@ -317,9 +317,9 @@ class TimePickerView extends WatchUi.View {
     }
     
     function decrementMinute() as Void {
-        _selectedMinute = _selectedMinute - 1;
-        if (_selectedMinute < 0) {
-            _selectedMinute = 59;
+        _targetMinute = _targetMinute - 1;
+        if (_targetMinute < 0) {
+            _targetMinute = 59;
             decrementHour();
         } else {
             WatchUi.requestUpdate();
@@ -327,9 +327,9 @@ class TimePickerView extends WatchUi.View {
     }
     
     function incrementSecond() as Void {
-        _selectedSecond = _selectedSecond + 1;
-        if (_selectedSecond >= 60) {
-            _selectedSecond = 0;
+        _targetSecond = _targetSecond + 1;
+        if (_targetSecond >= 60) {
+            _targetSecond = 0;
             incrementMinute();
         } else {
             WatchUi.requestUpdate();
@@ -337,9 +337,9 @@ class TimePickerView extends WatchUi.View {
     }
     
     function decrementSecond() as Void {
-        _selectedSecond = _selectedSecond - 1;
-        if (_selectedSecond < 0) {
-            _selectedSecond = 59;
+        _targetSecond = _targetSecond - 1;
+        if (_targetSecond < 0) {
+            _targetSecond = 59;
             decrementMinute();
         } else {
             WatchUi.requestUpdate();
@@ -361,7 +361,7 @@ class TimePickerView extends WatchUi.View {
         var clockTime = System.getClockTime();
         
         // Calculate current countdown
-        var timeDifference = calculateCountdownSeconds(clockTime, _selectedHour, _selectedMinute, _selectedSecond);
+        var timeDifference = calculateCountdownSeconds(clockTime, _targetHour, _targetMinute, _targetSecond);
         var absDifference = timeDifference.abs();
         var seconds = absDifference % 60;
         
@@ -373,13 +373,10 @@ class TimePickerView extends WatchUi.View {
         }
         
         // Set selected seconds to current time's seconds to snap to whole minutes
-        _selectedSecond = clockTime.sec;
+        _targetSecond = clockTime.sec;
         WatchUi.requestUpdate();
     }
 
-    // Helper function to calculate countdown seconds
-    // Returns: positive if target is in the past (elapsed time)
-    //          negative if target is in the future (countdown)
     function calculateCountdownSeconds(clockTime as System.ClockTime, targetHour as Number, targetMinute as Number, targetSecond as Number) as Number {
         // Convert current time to seconds since midnight
         var currentSeconds = clockTime.hour * 3600 + clockTime.min * 60 + clockTime.sec;
@@ -392,13 +389,36 @@ class TimePickerView extends WatchUi.View {
         return currentSeconds - targetSeconds;
     }
 
-    function snapToTime(
+    static function calculateTargetTimeToSnapCountdownSecondsToZero(
         currentHour as Number, currentMinute as Number, currentSecond as Number,
         countdownHour as Number, countdownMinute as Number, countdownSecond as Number) as Dictionary {
+        
+        // Snap the target time so that result seconds = currentSecond
+        // This aligns the countdown cleanly with the current time's seconds
+        // Round countdown seconds: if >= 30, add an extra minute
+        
+        var targetSecond = currentSecond;
+        
+        // Round up: if countdown seconds >= 30, add an extra minute
+        var roundUpMinute = (countdownSecond >= 30) ? 1 : 0;
+        
+        // Add countdown minutes plus rounding
+        var targetMinute = currentMinute + countdownMinute + roundUpMinute;
+        var targetHour = currentHour + countdownHour;
+        
+        // Handle overflow for minutes
+        if (targetMinute >= 60) {
+            targetHour += targetMinute / 60;
+            targetMinute = targetMinute % 60;
+        }
+        
+        // Handle overflow for hours (wrap at 24)
+        targetHour = targetHour % 24;
+        
         return {
-            :hour => 0,
-            :minute => 0,
-            :second => 0
+            :hour => targetHour,
+            :minute => targetMinute,
+            :second => targetSecond
         };
     }
 }
