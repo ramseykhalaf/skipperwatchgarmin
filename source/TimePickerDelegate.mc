@@ -19,11 +19,11 @@ class TimePickerDelegate extends WatchUi.BehaviorDelegate {
             // Switch to seconds mode
             _view.setMode(:seconds);
         } else if (currentMode == :seconds) {
-            // Switch to sync mode
-            _view.setMode(:sync);
+            // Switch to countdown mode
+            _view.setMode(:countdown);
         } else {
-            // In sync mode, do nothing (or handle sync mode behavior later)
-            // For now, just stay in sync mode
+            // In countdown mode - reset seconds to zero
+            _view.setCountdownSecondsToZero();
         }
         return true;
     }
@@ -58,6 +58,8 @@ class TimePickerDelegate extends WatchUi.BehaviorDelegate {
                 _view.incrementMinute();
             } else if (currentMode == :seconds) {
                 _view.incrementSecond();
+            } else if (currentMode == :countdown) {
+                _view.incrementCountdown();
             }
             return true;
         } else if (key == WatchUi.KEY_DOWN) {
@@ -67,6 +69,8 @@ class TimePickerDelegate extends WatchUi.BehaviorDelegate {
                 _view.decrementMinute();
             } else if (currentMode == :seconds) {
                 _view.decrementSecond();
+            } else if (currentMode == :countdown) {
+                _view.decrementCountdown();
             }
             return true;
         } else if (key == WatchUi.KEY_ENTER) {

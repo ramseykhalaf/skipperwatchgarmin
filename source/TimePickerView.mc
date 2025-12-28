@@ -272,6 +272,11 @@ class TimePickerView extends WatchUi.View {
         } else if (_mode == :seconds && _secondLabel != null) {
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
             dc.drawRectangle(_secondX - (highlightWidth / 2), highlightY, highlightWidth, highlightHeight);
+        } else if (_mode == :countdown && _countdownLabel != null) {
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+            var countdownWidth = dc.getTextWidthInPixels(_countdownStr, Graphics.FONT_NUMBER_MEDIUM) + (HIGHLIGHT_HORIZONTAL_SPACE * 2);
+            var countdownHighlightY = _row3Y - (highlightHeight / 2);
+            dc.drawRectangle(_row3X - (countdownWidth / 2), countdownHighlightY, countdownWidth, highlightHeight);
         }
     }
     
@@ -344,6 +349,37 @@ class TimePickerView extends WatchUi.View {
         } else {
             WatchUi.requestUpdate();
         }
+    }
+    
+    function incrementCountdown() as Void {
+        // Increase the countdown by adding 1 second to the target time
+        incrementSecond();
+    }
+    
+    function decrementCountdown() as Void {
+        // Decrease the countdown by subtracting 1 second from the target time
+        decrementSecond();
+    }
+    
+    function setCountdownSecondsToZero() as Void {
+        // Snap to the nearest minute by rounding the countdown
+        var clockTime = System.getClockTime();
+        
+        // Calculate current countdown
+        var timeDifference = calculateCountdownSeconds(clockTime, _selectedHour, _selectedMinute, _selectedSecond);
+        var absDifference = timeDifference.abs();
+        var seconds = absDifference % 60;
+        
+        // If seconds >= 30, round up (add 1 minute to target time)
+        // If seconds < 30, round down (keep current minute)
+        if (seconds >= 30) {
+            // Round up - add 1 minute to target time
+            incrementMinute();
+        }
+        
+        // Set selected seconds to current time's seconds to snap to whole minutes
+        _selectedSecond = clockTime.sec;
+        WatchUi.requestUpdate();
     }
 
     // Helper function to calculate countdown seconds
