@@ -351,7 +351,6 @@ class TimePickerView extends WatchUi.View {
     function setCountdownSecondsToZero() as Void {
         // Snap to the nearest minute by rounding the countdown
         var clockTime = System.getClockTime();
-        var now = Time.now();
         
         // Calculate current countdown
         var countdownSeconds = calculateCountdownSeconds(clockTime);
@@ -369,7 +368,6 @@ class TimePickerView extends WatchUi.View {
     // Helper function to set target moment to a specific time of day (handles day wrapping)
     private function setTargetMomentToTimeOfDay(hour as Number, minute as Number, second as Number) as Void {
         var now = Time.now();
-        var nowInfo = Gregorian.info(now, Time.FORMAT_SHORT);
         
         // Get current target time components to calculate adjustment
         var currentTargetInfo = getTargetTimeInfo();
