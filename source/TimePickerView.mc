@@ -74,10 +74,13 @@ class TimePickerView extends WatchUi.View {
 
         _countdownStr = "";
         
-        // Initialize to current time + 3 minutes
+        // Initialize to current time + 3 minutes, rounded to nearest minute
         var now = Time.now();
         var threeMinutes = new Time.Duration(180); // 3 minutes in seconds
         _targetMoment = now.add(threeMinutes);
+        var targetInfo = getTargetTimeInfo();
+        setTargetMomentToTimeOfDay(targetInfo.hour, targetInfo.min, 0);
+        
         _mode = :minutes;
         
         // Create timer to update current time display every second
@@ -174,7 +177,7 @@ class TimePickerView extends WatchUi.View {
 
         // Draw Row 3: Time picker
         var targetInfo = getTargetTimeInfo();
-        drawTargetTime(dc, targetInfo[:hour], targetInfo[:minute], targetInfo[:second], _centerX, _row3Y);
+        drawTargetTime(dc, targetInfo.hour, targetInfo.min, targetInfo.sec, _centerX, _row3Y);
         
         // Draw horizontal lines between rows at half ROW_SPACE, accounting for font height
         var lineY1 = _row2Y - _countdownMinutesFontHeight/2 - ROW_SPACE/2;
@@ -274,25 +277,20 @@ class TimePickerView extends WatchUi.View {
     }
     
     function getSelectedHour() as Number {
-        return getTargetTimeInfo()[:hour];
+        return getTargetTimeInfo().hour;
     }
     
     function getSelectedMinute() as Number {
-        return getTargetTimeInfo()[:minute];
+        return getTargetTimeInfo().min;
     }
     
     function getSelectedSecond() as Number {
-        return getTargetTimeInfo()[:second];
+        return getTargetTimeInfo().sec;
     }
     
     // Helper function to extract time components from target moment
-    private function getTargetTimeInfo() as Dictionary {
-        var info = Gregorian.info(_targetMoment, Time.FORMAT_SHORT);
-        return {
-            :hour => info.hour,
-            :minute => info.min,
-            :second => info.sec
-        };
+    private function getTargetTimeInfo() as Gregorian.Info {
+        return Gregorian.info(_targetMoment, Time.FORMAT_SHORT);
     }
     
     function getMode() as Symbol {
@@ -377,7 +375,7 @@ class TimePickerView extends WatchUi.View {
         var currentTargetInfo = getTargetTimeInfo();
         
         // Calculate the difference in seconds between current target time and desired time
-        var currentTargetSeconds = currentTargetInfo[:hour] * 3600 + currentTargetInfo[:minute] * 60 + currentTargetInfo[:second];
+        var currentTargetSeconds = currentTargetInfo.hour * 3600 + currentTargetInfo.min * 60 + currentTargetInfo.sec;
         var desiredSeconds = hour * 3600 + minute * 60 + second;
         var adjustmentSeconds = desiredSeconds - currentTargetSeconds;
         
