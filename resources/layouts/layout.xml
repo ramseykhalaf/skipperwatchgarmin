@@ -13,8 +13,8 @@
         <param name="yPercent">50</param>
         <param name="widthPercent">80</param>
         <param name="heightPercent">30</param>
-        <param name="penWidth">2</param>
-        <param name="radius">3</param>
+        <param name="penWidth">4</param>
+        <param name="radius">5</param>
     </drawable>
 
 
