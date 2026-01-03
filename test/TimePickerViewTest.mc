@@ -7,7 +7,7 @@ class TimePickerViewTest {
 
     (:test)
     function testSnapNegativeCountdownDoNothing(logger as Logger) as Boolean {
-        var result = TimePickerView.calculateTargetTimeToSnapCountdownSecondsToZero(11, 22, 33, -300);
+        var result = TimePickerDelegate.calculateTargetTimeToSnapCountdownSecondsToZero(11, 22, 33, -300);
         return result[:hour] == 11 && 
                result[:minute] == 27 && 
                result[:second] == 33;
@@ -15,7 +15,7 @@ class TimePickerViewTest {
 
     (:test)
     function testSnapNegativeCountdownRoundDown29(logger as Logger) as Boolean {
-        var result = TimePickerView.calculateTargetTimeToSnapCountdownSecondsToZero(11, 22, 33, -329);
+        var result = TimePickerDelegate.calculateTargetTimeToSnapCountdownSecondsToZero(11, 22, 33, -329);
         return result[:hour] == 11 && 
                result[:minute] == 27 && 
                result[:second] == 33;
@@ -23,7 +23,7 @@ class TimePickerViewTest {
 
     (:test)
     function testSnapNegativeCountdownRoundUp30(logger as Logger) as Boolean {
-        var result = TimePickerView.calculateTargetTimeToSnapCountdownSecondsToZero(11, 22, 33, -270);
+        var result = TimePickerDelegate.calculateTargetTimeToSnapCountdownSecondsToZero(11, 22, 33, -270);
         return result[:hour] == 11 && 
                result[:minute] == 27 && 
                result[:second] == 33;
@@ -31,7 +31,7 @@ class TimePickerViewTest {
 
     (:test)
     function testSnapPositiveCountdownRoundDown29(logger as Logger) as Boolean {
-        var result = TimePickerView.calculateTargetTimeToSnapCountdownSecondsToZero(11, 22, 33, 329);
+        var result = TimePickerDelegate.calculateTargetTimeToSnapCountdownSecondsToZero(11, 22, 33, 329);
         return result[:hour] == 11 && 
                result[:minute] == 17 && 
                result[:second] == 33;
@@ -39,7 +39,7 @@ class TimePickerViewTest {
 
     (:test)
     function testSnapPositiveCountdownRoundUp30(logger as Logger) as Boolean {
-        var result = TimePickerView.calculateTargetTimeToSnapCountdownSecondsToZero(11, 22, 33, 270);
+        var result = TimePickerDelegate.calculateTargetTimeToSnapCountdownSecondsToZero(11, 22, 33, 270);
         return result[:hour] == 11 && 
                result[:minute] == 17 && 
                result[:second] == 33;

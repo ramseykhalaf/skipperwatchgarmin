@@ -18,9 +18,7 @@ class TimePickerView extends WatchUi.View {
     private const COUNTDOWN_HOURS_FONT_SIZE = Graphics.FONT_NUMBER_HOT;
     private const TARGET_FONT_SIZE = Graphics.FONT_NUMBER_MEDIUM;
     
-    // Target time properties
-    private var _targetMoment as Time.Moment;
-    private var _mode as Symbol; // :hours, :minutes, :seconds, :countdown
+    private var _delegate as TimePickerDelegate?;
     private var _timer as Timer.Timer;
     
     // Stored positions
@@ -74,17 +72,12 @@ class TimePickerView extends WatchUi.View {
 
         _countdownStr = "";
         
-        // Initialize to current time + 3 minutes, rounded to nearest minute
-        var now = Time.now();
-        var threeMinutes = new Time.Duration(180); // 3 minutes in seconds
-        _targetMoment = now.add(threeMinutes);
-        var targetInfo = getTargetTimeInfo();
-        setTargetMomentToTimeOfDay(targetInfo.hour, targetInfo.min, 0);
-        
-        _mode = :minutes;
-        
         // Create timer to update current time display every second
         _timer = new Timer.Timer();
+    }
+
+    function setDelegate(delegate as TimePickerDelegate) as Void {
+        _delegate = delegate;
     }
     
     function onShow() as Void {
@@ -149,6 +142,10 @@ class TimePickerView extends WatchUi.View {
     }
 
     function onUpdate(dc as Dc) as Void {
+        if (_delegate == null) {
+            return;
+        }
+
         // Clear screen
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
         dc.clear();
@@ -162,7 +159,7 @@ class TimePickerView extends WatchUi.View {
         drawClockTime(dc, clockTime, _centerX, row1Y);
         
         // Draw Row 2: Countdown timer
-        var timeDifference = calculateCountdownSeconds(clockTime);
+        var timeDifference = _delegate.calculateCountdownSeconds(Time.now());
         // Set countdown font height and size once based on whether hours are present
         var absDifference = timeDifference.abs();
         var hours = absDifference / 3600;
@@ -176,7 +173,7 @@ class TimePickerView extends WatchUi.View {
         drawCountdownTimer(dc, timeDifference, _row2X, _row2Y);
 
         // Draw Row 3: Time picker
-        var targetInfo = getTargetTimeInfo();
+        var targetInfo = Gregorian.info(_delegate.getTargetMoment(), Time.FORMAT_SHORT);
         drawTargetTime(dc, targetInfo.hour, targetInfo.min, targetInfo.sec, _centerX, _row3Y);
         
         // Draw horizontal lines between rows at half ROW_SPACE, accounting for font height
@@ -189,19 +186,23 @@ class TimePickerView extends WatchUi.View {
     }
     
     function drawSelectorHighlight(dc as Dc) as Void {
+        if (_delegate == null) {
+            return;
+        }
+        var mode = _delegate.getMode();
         var targetHighlightHeight = _targetFontHeight + (HIGHLIGHT_VERTICAL_SPACE * 2);
         var targetHighlightWidth = _targetDoubleDigitFontWidth + (HIGHLIGHT_HORIZONTAL_SPACE * 2);
         var highlightY = _row3Y - (targetHighlightHeight / 2);
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
 
-        if (_mode == :hours) {
+        if (mode == :hours) {
             dc.drawRectangle(_hourX - (targetHighlightWidth / 2), highlightY, targetHighlightWidth, targetHighlightHeight);
-        } else if (_mode == :minutes) {
+        } else if (mode == :minutes) {
             dc.drawRectangle(_minuteX - (targetHighlightWidth / 2), highlightY, targetHighlightWidth, targetHighlightHeight);
-        } else if (_mode == :seconds) {
+        } else if (mode == :seconds) {
             dc.drawRectangle(_secondX - (targetHighlightWidth / 2), highlightY, targetHighlightWidth, targetHighlightHeight);
-        } else if (_mode == :countdown) {
+        } else if (mode == :countdown) {
 
             var countdownHighlightHeight = _countdownFontHeight + (HIGHLIGHT_VERTICAL_SPACE * 2);
             var countdownHighlightWidth = dc.getTextWidthInPixels(_countdownStr, _countdownFontSize) + (HIGHLIGHT_HORIZONTAL_SPACE * 2);
@@ -274,165 +275,6 @@ class TimePickerView extends WatchUi.View {
         // Draw horizontal lines between rows
         dc.fillRectangle(0, divider1Y - LINE_WIDTH/2, _screenWidth, LINE_WIDTH);
         dc.fillRectangle(0, divider2Y - LINE_WIDTH/2, _screenWidth, LINE_WIDTH);
-    }
-    
-    function getSelectedHour() as Number {
-        return getTargetTimeInfo().hour;
-    }
-    
-    function getSelectedMinute() as Number {
-        return getTargetTimeInfo().min;
-    }
-    
-    function getSelectedSecond() as Number {
-        return getTargetTimeInfo().sec;
-    }
-    
-    // Helper function to extract time components from target moment
-    private function getTargetTimeInfo() as Gregorian.Info {
-        return Gregorian.info(_targetMoment, Time.FORMAT_SHORT);
-    }
-    
-    function getMode() as Symbol {
-        return _mode;
-    }
-    
-    function setMode(mode as Symbol) as Void {
-        _mode = mode;
-        WatchUi.requestUpdate();
-    }
-    
-    function incrementHour() as Void {
-        var oneHour = new Time.Duration(3600);
-        _targetMoment = _targetMoment.add(oneHour);
-        WatchUi.requestUpdate();
-    }
-    
-    function decrementHour() as Void {
-        var oneHour = new Time.Duration(3600);
-        _targetMoment = _targetMoment.subtract(oneHour);
-        WatchUi.requestUpdate();
-    }
-    
-    function incrementMinute() as Void {
-        var oneMinute = new Time.Duration(60);
-        _targetMoment = _targetMoment.add(oneMinute);
-        WatchUi.requestUpdate();
-    }
-    
-    function decrementMinute() as Void {
-        var oneMinute = new Time.Duration(60);
-        _targetMoment = _targetMoment.subtract(oneMinute);
-        WatchUi.requestUpdate();
-    }
-    
-    function incrementSecond() as Void {
-        var oneSecond = new Time.Duration(1);
-        _targetMoment = _targetMoment.add(oneSecond);
-        WatchUi.requestUpdate();
-    }
-    
-    function decrementSecond() as Void {
-        var oneSecond = new Time.Duration(1);
-        _targetMoment = _targetMoment.subtract(oneSecond);
-        WatchUi.requestUpdate();
-    }
-    
-    function incrementCountdown() as Void {
-        // Increase the countdown by adding 1 second to the target time
-        incrementSecond();
-    }
-    
-    function decrementCountdown() as Void {
-        // Decrease the countdown by subtracting 1 second from the target time
-        decrementSecond();
-    }
-    
-    function setCountdownSecondsToZero() as Void {
-        // Snap to the nearest minute by rounding the countdown
-        var clockTime = System.getClockTime();
-        
-        // Calculate current countdown
-        var countdownSeconds = calculateCountdownSeconds(clockTime);
-        
-        // Use the static helper to calculate the snapped target time
-        var snappedTime = calculateTargetTimeToSnapCountdownSecondsToZero(
-            clockTime.hour, clockTime.min, clockTime.sec, countdownSeconds);
-        
-        // Update target moment by setting it to today at the snapped time
-        setTargetMomentToTimeOfDay(snappedTime[:hour], snappedTime[:minute], snappedTime[:second]);
-        
-        WatchUi.requestUpdate();
-    }
-    
-    // Helper function to set target moment to a specific time of day (handles day wrapping)
-    private function setTargetMomentToTimeOfDay(hour as Number, minute as Number, second as Number) as Void {
-        var now = Time.now();
-        
-        // Get current target time components to calculate adjustment
-        var currentTargetInfo = getTargetTimeInfo();
-        
-        // Calculate the difference in seconds between current target time and desired time
-        var currentTargetSeconds = currentTargetInfo.hour * 3600 + currentTargetInfo.min * 60 + currentTargetInfo.sec;
-        var desiredSeconds = hour * 3600 + minute * 60 + second;
-        var adjustmentSeconds = desiredSeconds - currentTargetSeconds;
-        
-        // Apply adjustment
-        var adjustedMoment = _targetMoment.add(new Time.Duration(adjustmentSeconds));
-        
-        // Handle day wrapping: if the adjusted moment is in the past, add one day
-        // This handles cases where the target time has wrapped to the next day
-        if (adjustedMoment.lessThan(now)) {
-            var oneDay = new Time.Duration(86400);
-            adjustedMoment = adjustedMoment.add(oneDay);
-        }
-        
-        _targetMoment = adjustedMoment;
-    }
-
-    function calculateCountdownSeconds(clockTime as System.ClockTime) as Number {
-        var now = Time.now();
-        var comparison = _targetMoment.compare(now);
-        // If target < now (past), comparison is negative, return positive (elapsed)
-        // If target > now (future), comparison is positive, return negative (countdown)
-        return comparison;
-    }
-
-    static function calculateTargetTimeToSnapCountdownSecondsToZero(
-        clockHour as Number, clockMinute as Number, clockSecond as Number, countdownSeconds as Number) as Dictionary {
-        
-        // Convert current time to total seconds since midnight
-        var currentTotalSeconds = clockHour * 3600 + clockMinute * 60 + clockSecond;
-        
-        // Extract the seconds component from countdown and round to nearest minute
-        var absCountdownSeconds = countdownSeconds.abs();
-        var countdownSecondComponent = absCountdownSeconds % 60;
-        var roundUpMinute = (countdownSecondComponent >= 30) ? 1 : 0;
-        
-        // Calculate rounded countdown in total seconds
-        var roundedCountdownMinutes = (absCountdownSeconds / 60) + roundUpMinute;
-        var roundedCountdown = (countdownSeconds < 0 ? -1 : 1) * roundedCountdownMinutes * 60;
-        
-        // Calculate target time: currentTime - countdown
-        // (negative countdown means target in future, so we add)
-        var targetTotalSeconds = currentTotalSeconds - roundedCountdown;
-        
-        // Handle wrapping (ensure positive and within 24 hours)
-        while (targetTotalSeconds < 0) {
-            targetTotalSeconds += 86400; // 24 hours in seconds
-        }
-        targetTotalSeconds = targetTotalSeconds % 86400;
-        
-        // Convert back to hours, minutes, seconds
-        var targetHour = targetTotalSeconds / 3600;
-        var targetMinute = (targetTotalSeconds % 3600) / 60;
-        var targetSecond = targetTotalSeconds % 60;
-        
-        return {
-            :hour => targetHour,
-            :minute => targetMinute,
-            :second => targetSecond
-        };
     }
 }
 

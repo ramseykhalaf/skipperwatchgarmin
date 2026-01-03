@@ -1,76 +1,192 @@
 import Toybox.Lang;
 import Toybox.System;
+import Toybox.Time;
+import Toybox.Time.Gregorian;
 import Toybox.WatchUi;
 
 class TimePickerDelegate extends WatchUi.BehaviorDelegate {
     private var _view as TimePickerView;
+    private var _targetMoment as Time.Moment;
+    private var _mode as Symbol; // :hours, :minutes, :seconds, :countdown
 
     function initialize(view as TimePickerView) {
         BehaviorDelegate.initialize();
         _view = view;
+
+        // Initialize to current time + 3 minutes, rounded to nearest minute
+        var now = Time.now();
+        var threeMinutes = new Time.Duration(180); // 3 minutes in seconds
+        _targetMoment = now.add(threeMinutes);
+        
+        // Use local helper to initialize target time info
+        var targetInfo = Gregorian.info(_targetMoment, Time.FORMAT_SHORT);
+        setTargetMomentToTimeOfDay(targetInfo.hour, targetInfo.min, 0);
+        
+        _mode = :minutes;
+    }
+
+    function getTargetMoment() as Time.Moment {
+        return _targetMoment;
+    }
+
+    function getMode() as Symbol {
+        return _mode;
+    }
+
+    function setMode(mode as Symbol) as Void {
+        _mode = mode;
+        WatchUi.requestUpdate();
+    }
+
+    function incrementHour() as Void {
+        var oneHour = new Time.Duration(3600);
+        _targetMoment = _targetMoment.add(oneHour);
+        WatchUi.requestUpdate();
+    }
+    
+    function decrementHour() as Void {
+        var oneHour = new Time.Duration(3600);
+        _targetMoment = _targetMoment.subtract(oneHour);
+        WatchUi.requestUpdate();
+    }
+    
+    function incrementMinute() as Void {
+        var oneMinute = new Time.Duration(60);
+        _targetMoment = _targetMoment.add(oneMinute);
+        WatchUi.requestUpdate();
+    }
+    
+    function decrementMinute() as Void {
+        var oneMinute = new Time.Duration(60);
+        _targetMoment = _targetMoment.subtract(oneMinute);
+        WatchUi.requestUpdate();
+    }
+    
+    function incrementSecond() as Void {
+        var oneSecond = new Time.Duration(1);
+        _targetMoment = _targetMoment.add(oneSecond);
+        WatchUi.requestUpdate();
+    }
+    
+    function decrementSecond() as Void {
+        var oneSecond = new Time.Duration(1);
+        _targetMoment = _targetMoment.subtract(oneSecond);
+        WatchUi.requestUpdate();
+    }
+    
+    function incrementCountdown() as Void {
+        incrementSecond();
+    }
+    
+    function decrementCountdown() as Void {
+        decrementSecond();
+    }
+    
+    function setCountdownSecondsToZero() as Void {
+        var clockTime = System.getClockTime();
+        var countdownSeconds = calculateCountdownSeconds(Time.now());
+        var snappedTime = calculateTargetTimeToSnapCountdownSecondsToZero(
+            clockTime.hour, clockTime.min, clockTime.sec, countdownSeconds);
+        setTargetMomentToTimeOfDay(snappedTime[:hour], snappedTime[:minute], snappedTime[:second]);
+        WatchUi.requestUpdate();
+    }
+
+    function calculateCountdownSeconds(currentMoment as Time.Moment) as Number {
+        return currentMoment.compare(_targetMoment);
+    }
+
+    private function setTargetMomentToTimeOfDay(hour as Number, minute as Number, second as Number) as Void {
+        var targetTimeInfo = Gregorian.info(_targetMoment, Time.FORMAT_SHORT);
+        var options = {
+            :year   => targetTimeInfo.year,
+            :month  => targetTimeInfo.month,
+            :day    => targetTimeInfo.day,
+            :hour   => hour,
+            :minute => minute,
+            :second => second
+        };
+        _targetMoment = Gregorian.moment(options);
+    }
+
+    static function calculateTargetTimeToSnapCountdownSecondsToZero(
+        clockHour as Number, clockMinute as Number, clockSecond as Number, countdownSeconds as Number) as Dictionary {
+        
+        var currentTotalSeconds = clockHour * 3600 + clockMinute * 60 + clockSecond;
+        var absCountdownSeconds = countdownSeconds.abs();
+        var countdownSecondComponent = absCountdownSeconds % 60;
+        var roundUpMinute = (countdownSecondComponent >= 30) ? 1 : 0;
+        
+        var roundedCountdownMinutes = (absCountdownSeconds / 60) + roundUpMinute;
+        var roundedCountdown = (countdownSeconds < 0 ? -1 : 1) * roundedCountdownMinutes * 60;
+        
+        var targetTotalSeconds = currentTotalSeconds - roundedCountdown;
+        
+        while (targetTotalSeconds < 0) {
+            targetTotalSeconds += 86400;
+        }
+        targetTotalSeconds = targetTotalSeconds % 86400;
+        
+        var targetHour = targetTotalSeconds / 3600;
+        var targetMinute = (targetTotalSeconds % 3600) / 60;
+        var targetSecond = targetTotalSeconds % 60;
+        
+        return {
+            :hour => targetHour,
+            :minute => targetMinute,
+            :second => targetSecond
+        };
     }
 
     function onSelect() as Boolean {
-        var currentMode = _view.getMode();
-        if (currentMode == :hours) {
-            // Switch to minutes mode
-            _view.setMode(:minutes);
-        } else if (currentMode == :minutes) {
-            // Switch to seconds mode
-            _view.setMode(:seconds);
-        } else if (currentMode == :seconds) {
-            // Switch to countdown mode
-            _view.setMode(:countdown);
+        if (_mode == :hours) {
+            setMode(:minutes);
+        } else if (_mode == :minutes) {
+            setMode(:seconds);
+        } else if (_mode == :seconds) {
+            setMode(:countdown);
         } else {
-            // In countdown mode - reset seconds to zero
-            _view.setCountdownSecondsToZero();
+            setCountdownSecondsToZero();
         }
         return true;
     }
 
     function onBack() as Boolean {
-        var currentMode = _view.getMode();
-        if (currentMode == :hours) {
-            // Exit app
+        if (_mode == :hours) {
             return false;
-        } else if (currentMode == :minutes) {
-            // Return to hours mode
-            _view.setMode(:hours);
+        } else if (_mode == :minutes) {
+            setMode(:hours);
             return true;
-        } else if (currentMode == :seconds) {
-            // Return to minutes mode
-            _view.setMode(:minutes);
+        } else if (_mode == :seconds) {
+            setMode(:minutes);
             return true;
         } else {
-            // Return to seconds mode from sync mode
-            _view.setMode(:seconds);
+            setMode(:seconds);
             return true;
         }
     }
 
     function onKey(keyEvent as WatchUi.KeyEvent) as Boolean {
         var key = keyEvent.getKey();
-        var currentMode = _view.getMode();
         if (key == WatchUi.KEY_UP) {
-            if (currentMode == :hours) {
-                _view.incrementHour();
-            } else if (currentMode == :minutes) {
-                _view.incrementMinute();
-            } else if (currentMode == :seconds) {
-                _view.incrementSecond();
-            } else if (currentMode == :countdown) {
-                _view.incrementCountdown();
+            if (_mode == :hours) {
+                incrementHour();
+            } else if (_mode == :minutes) {
+                incrementMinute();
+            } else if (_mode == :seconds) {
+                incrementSecond();
+            } else if (_mode == :countdown) {
+                incrementCountdown();
             }
             return true;
         } else if (key == WatchUi.KEY_DOWN) {
-            if (currentMode == :hours) {
-                _view.decrementHour();
-            } else if (currentMode == :minutes) {
-                _view.decrementMinute();
-            } else if (currentMode == :seconds) {
-                _view.decrementSecond();
-            } else if (currentMode == :countdown) {
-                _view.decrementCountdown();
+            if (_mode == :hours) {
+                decrementHour();
+            } else if (_mode == :minutes) {
+                decrementMinute();
+            } else if (_mode == :seconds) {
+                decrementSecond();
+            } else if (_mode == :countdown) {
+                decrementCountdown();
             }
             return true;
         } else if (key == WatchUi.KEY_ENTER) {
@@ -82,25 +198,23 @@ class TimePickerDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function onUp() as Boolean {
-        var currentMode = _view.getMode();
-        if (currentMode == :hours) {
-            _view.incrementHour();
-        } else if (currentMode == :minutes) {
-            _view.incrementMinute();
-        } else if (currentMode == :seconds) {
-            _view.incrementSecond();
+        if (_mode == :hours) {
+            incrementHour();
+        } else if (_mode == :minutes) {
+            incrementMinute();
+        } else if (_mode == :seconds) {
+            incrementSecond();
         }
         return true;
     }
 
     function onDown() as Boolean {
-        var currentMode = _view.getMode();
-        if (currentMode == :hours) {
-            _view.decrementHour();
-        } else if (currentMode == :minutes) {
-            _view.decrementMinute();
-        } else if (currentMode == :seconds) {
-            _view.decrementSecond();
+        if (_mode == :hours) {
+            decrementHour();
+        } else if (_mode == :minutes) {
+            decrementMinute();
+        } else if (_mode == :seconds) {
+            decrementSecond();
         }
         return true;
     }
