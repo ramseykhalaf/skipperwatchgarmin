@@ -5,16 +5,14 @@ import Toybox.Time.Gregorian;
 import Toybox.WatchUi;
 
 class TimePickerDelegate extends WatchUi.BehaviorDelegate {
-    private var _view as TimePickerView;
     private var _targetMoment as Time.Moment;
     private var _mode as Symbol; // :hours, :minutes, :seconds, :countdown
 
-    function initialize(view as TimePickerView) {
+    function initialize() {
         BehaviorDelegate.initialize();
-        _view = view;
 
         // Initialize to current time + 3 minutes, rounded to nearest minute
-        var now = Time.now();
+        var now = getCurrentTime();
         var threeMinutes = new Time.Duration(180); // 3 minutes in seconds
         _targetMoment = now.add(threeMinutes);
         
@@ -23,6 +21,10 @@ class TimePickerDelegate extends WatchUi.BehaviorDelegate {
         _targetMoment = setTargetMomentToTimeOfDay(_targetMoment, targetInfo.hour, targetInfo.min, 0);
         
         _mode = :minutes;
+    }
+
+    function getCurrentTime() as Time.Moment {
+        return Time.now();
     }
 
     function getTargetMoment() as Time.Moment {
