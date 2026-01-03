@@ -20,7 +20,7 @@ class TimePickerDelegate extends WatchUi.BehaviorDelegate {
         
         // Use local helper to initialize target time info
         var targetInfo = Gregorian.info(_targetMoment, Time.FORMAT_SHORT);
-        setTargetMomentToTimeOfDay(targetInfo.hour, targetInfo.min, 0);
+        _targetMoment = setTargetMomentToTimeOfDay(_targetMoment, targetInfo.hour, targetInfo.min, 0);
         
         _mode = :minutes;
     }
@@ -87,7 +87,7 @@ class TimePickerDelegate extends WatchUi.BehaviorDelegate {
         var countdownSeconds = calculateCountdownSeconds(Time.now());
         var snappedTime = calculateTargetTimeToSnapCountdownSecondsToZero(
             clockTime.hour, clockTime.min, clockTime.sec, countdownSeconds);
-        setTargetMomentToTimeOfDay(snappedTime[:hour], snappedTime[:minute], snappedTime[:second]);
+        _targetMoment = setTargetMomentToTimeOfDay(_targetMoment, snappedTime[:hour], snappedTime[:minute], snappedTime[:second]);
         WatchUi.requestUpdate();
     }
 
@@ -95,8 +95,8 @@ class TimePickerDelegate extends WatchUi.BehaviorDelegate {
         return currentMoment.compare(_targetMoment);
     }
 
-    private function setTargetMomentToTimeOfDay(hour as Number, minute as Number, second as Number) as Void {
-        var targetTimeInfo = Gregorian.info(_targetMoment, Time.FORMAT_SHORT);
+    static function setTargetMomentToTimeOfDay(moment as Time.Moment, hour as Number, minute as Number, second as Number) as Time.Moment {
+        var targetTimeInfo = Gregorian.info(moment, Time.FORMAT_SHORT);
         var options = {
             :year   => targetTimeInfo.year,
             :month  => targetTimeInfo.month,
@@ -105,7 +105,7 @@ class TimePickerDelegate extends WatchUi.BehaviorDelegate {
             :minute => minute,
             :second => second
         };
-        _targetMoment = Gregorian.moment(options);
+        return Gregorian.moment(options);
     }
 
     static function calculateTargetTimeToSnapCountdownSecondsToZero(

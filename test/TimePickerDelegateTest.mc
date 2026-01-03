@@ -3,7 +3,7 @@ import Toybox.System;
 import Toybox.Test;
 
 (:test)
-class TimePickerViewTest {
+class TimePickerDelegateTest {
 
     (:test)
     function testSnapNegativeCountdownDoNothing(logger as Logger) as Boolean {
