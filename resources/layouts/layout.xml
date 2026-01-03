@@ -19,4 +19,29 @@
     <label id="TargetMM" x="50%" y="81%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" />
     <label id="TargetColon2" x="62%" y="81%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" />
     <label id="TargetSS" x="74%" y="81%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" />
+
+    <drawable id="HighlightHH" class="HighlightDrawable">
+        <param name="xPercent">26</param>
+        <param name="yPercent">81</param>
+        <param name="widthPercent">15</param>
+        <param name="heightPercent">15</param>
+    </drawable>
+    <drawable id="HighlightMM" class="HighlightDrawable">
+        <param name="xPercent">50</param>
+        <param name="yPercent">81</param>
+        <param name="widthPercent">15</param>
+        <param name="heightPercent">15</param>
+    </drawable>
+    <drawable id="HighlightSS" class="HighlightDrawable">
+        <param name="xPercent">74</param>
+        <param name="yPercent">81</param>
+        <param name="widthPercent">15</param>
+        <param name="heightPercent">15</param>
+    </drawable>
+    <drawable id="HighlightCountdown" class="HighlightDrawable">
+        <param name="xPercent">50</param>
+        <param name="yPercent">48</param>
+        <param name="widthPercent">80</param>
+        <param name="heightPercent">25</param>
+    </drawable>
 </layout>
