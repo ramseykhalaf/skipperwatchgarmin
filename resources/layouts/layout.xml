@@ -1,4 +1,5 @@
 <layout id="MainLayout">
+
     <label id="ClockLabel" x="50%" y="19%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" />
 
     <drawable id="Divider1" class="DividerDrawable">
@@ -6,9 +7,15 @@
         <param name="height">6</param>
     </drawable>
 
-
     <label id="CountdownLabel" x="50%" y="48%" font="Graphics.FONT_NUMBER_THAI_HOT" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" />
-    
+    <drawable id="HighlightCountdown" class="HighlightDrawable">
+        <param name="xPercent">50</param>
+        <param name="yPercent">50</param>
+        <param name="widthPercent">80</param>
+        <param name="heightPercent">30</param>
+    </drawable>
+
+
     <drawable id="Divider2" class="DividerDrawable">
         <param name="yPercent">68</param>
         <param name="height">6</param>
@@ -23,25 +30,19 @@
     <drawable id="HighlightHH" class="HighlightDrawable">
         <param name="xPercent">26</param>
         <param name="yPercent">81</param>
-        <param name="widthPercent">15</param>
-        <param name="heightPercent">15</param>
+        <param name="widthPercent">20</param>
+        <param name="heightPercent">20</param>
     </drawable>
     <drawable id="HighlightMM" class="HighlightDrawable">
         <param name="xPercent">50</param>
         <param name="yPercent">81</param>
-        <param name="widthPercent">15</param>
-        <param name="heightPercent">15</param>
+        <param name="widthPercent">20</param>
+        <param name="heightPercent">20</param>
     </drawable>
     <drawable id="HighlightSS" class="HighlightDrawable">
         <param name="xPercent">74</param>
         <param name="yPercent">81</param>
-        <param name="widthPercent">15</param>
-        <param name="heightPercent">15</param>
-    </drawable>
-    <drawable id="HighlightCountdown" class="HighlightDrawable">
-        <param name="xPercent">50</param>
-        <param name="yPercent">48</param>
-        <param name="widthPercent">80</param>
-        <param name="heightPercent">25</param>
+        <param name="widthPercent">20</param>
+        <param name="heightPercent">20</param>
     </drawable>
 </layout>
