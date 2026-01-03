@@ -36,7 +36,9 @@ class HighlightDrawable extends WatchUi.Drawable {
         var y = (screenHeight * _yPercent) / 100 - (height / 2);
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawRectangle(x, y, width, height);
+        dc.setPenWidth(2);
+        dc.drawRoundedRectangle(x, y, width, height, 3);
+        dc.setPenWidth(1);
     }
 }
 
