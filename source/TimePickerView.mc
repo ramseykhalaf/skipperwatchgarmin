@@ -7,12 +7,9 @@ import Toybox.Timer;
 import Toybox.WatchUi;
 
 class TimePickerView extends WatchUi.View {
-    private const ROW_SPACE = 0;
-    private const LINE_WIDTH = 6;
     private const HIGHLIGHT_VERTICAL_SPACE = 0;
     private const HIGHLIGHT_HORIZONTAL_SPACE = 0;
 
-    private const CLOCK_FONT_SIZE = Graphics.FONT_NUMBER_MEDIUM;
     private const COUNTDOWN_MINUTES_FONT_SIZE = Graphics.FONT_NUMBER_THAI_HOT;
     private const COUNTDOWN_HOURS_FONT_SIZE = Graphics.FONT_NUMBER_HOT;
     private const TARGET_FONT_SIZE = Graphics.FONT_NUMBER_MEDIUM;
@@ -21,7 +18,6 @@ class TimePickerView extends WatchUi.View {
     private var _timer as Timer.Timer;
     
     // Stored positions
-    private var _screenWidth as Number;
     private var _countdownFontHeight as Number;
     private var _countdownFontSize; // Graphics.FontReference - stored font constant
     private var _targetFontHeight as Number;
@@ -53,8 +49,6 @@ class TimePickerView extends WatchUi.View {
 
         _countdownX = 0;
         _countdownY = 0;
-        
-        _screenWidth = 0;
         
         _countdownFontHeight = 0;
         _countdownFontSize = COUNTDOWN_MINUTES_FONT_SIZE;
@@ -100,9 +94,6 @@ class TimePickerView extends WatchUi.View {
         
         _targetFontHeight = dc.getFontHeight(TARGET_FONT_SIZE);
         _targetDoubleDigitFontWidth = dc.getTextWidthInPixels("00", Graphics.FONT_NUMBER_MEDIUM);
-        
-        // Get screen dimensions
-        _screenWidth = dc.getWidth();
         
         // Update stored positions by querying the layout elements
         var countdownLabel = View.findDrawableById("CountdownLabel") as WatchUi.Text;
@@ -179,13 +170,13 @@ class TimePickerView extends WatchUi.View {
         (View.findDrawableById("TargetColon2") as WatchUi.Text).setText(":");
         (View.findDrawableById("TargetSS") as WatchUi.Text).setText(targetInfo.sec.format("%02d"));
 
+        // Update divider colors based on countdown state
+        var dividerColor = timeDifference < 0 ? Graphics.COLOR_RED : Graphics.COLOR_GREEN;
+        (View.findDrawableById("Divider1") as DividerDrawable).setColor(dividerColor);
+        (View.findDrawableById("Divider2") as DividerDrawable).setColor(dividerColor);
+
         // Call the parent onUpdate to draw the layout
         View.onUpdate(dc);
-        
-        // Draw horizontal lines between rows at half ROW_SPACE, accounting for font height
-        var lineY1 = _countdownY - _countdownMinutesFontHeight/2 - ROW_SPACE/2;
-        var lineY2 = _countdownY + _countdownMinutesFontHeight/2 - ROW_SPACE/2;
-        drawDividers(dc, timeDifference, lineY1, lineY2);
         
         // Draw white outline boxes for active field on top (custom drawing)
         drawSelectorHighlight(dc);
@@ -215,21 +206,6 @@ class TimePickerView extends WatchUi.View {
             var countdownHighlightY = _countdownY - (countdownHighlightHeight / 2);
             dc.drawRectangle(_countdownX - (countdownHighlightWidth / 2), countdownHighlightY, countdownHighlightWidth, countdownHighlightHeight);
         }
-    }
-    
-    function drawDividers(dc as Dc, timeDifference as Number, divider1Y as Number, divider2Y as Number) as Void {
-        // Set line color: red for countdown, green for counting up
-        if (timeDifference < 0) {
-            // Counting down - RED
-            dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_RED);
-        } else {
-            // Counting up - GREEN
-            dc.setColor(Graphics.COLOR_GREEN, Graphics.COLOR_GREEN);
-        }
-        
-        // Draw horizontal lines between rows
-        dc.fillRectangle(0, divider1Y - LINE_WIDTH/2, _screenWidth, LINE_WIDTH);
-        dc.fillRectangle(0, divider2Y - LINE_WIDTH/2, _screenWidth, LINE_WIDTH);
     }
 }
 
