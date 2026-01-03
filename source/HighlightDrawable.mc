@@ -7,6 +7,8 @@ class HighlightDrawable extends WatchUi.Drawable {
     private var _yPercent as Number;
     private var _widthPercent as Number;
     private var _heightPercent as Number;
+    private var _penWidth as Number;
+    private var _radius as Number;
     private var _visible as Boolean;
 
     function initialize(params as Dictionary) {
@@ -15,6 +17,8 @@ class HighlightDrawable extends WatchUi.Drawable {
         _yPercent = params.hasKey(:yPercent) ? params[:yPercent] : 50;
         _widthPercent = params.hasKey(:widthPercent) ? params[:widthPercent] : 10;
         _heightPercent = params.hasKey(:heightPercent) ? params[:heightPercent] : 10;
+        _penWidth = params.hasKey(:penWidth) ? params[:penWidth] : 2;
+        _radius = params.hasKey(:radius) ? params[:radius] : 3;
         _visible = false;
     }
 
@@ -36,8 +40,8 @@ class HighlightDrawable extends WatchUi.Drawable {
         var y = (screenHeight * _yPercent) / 100 - (height / 2);
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.setPenWidth(2);
-        dc.drawRoundedRectangle(x, y, width, height, 3);
+        dc.setPenWidth(_penWidth);
+        dc.drawRoundedRectangle(x, y, width, height, _radius);
         dc.setPenWidth(1);
     }
 }

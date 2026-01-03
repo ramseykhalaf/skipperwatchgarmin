@@ -13,6 +13,8 @@
         <param name="yPercent">50</param>
         <param name="widthPercent">80</param>
         <param name="heightPercent">30</param>
+        <param name="penWidth">2</param>
+        <param name="radius">3</param>
     </drawable>
 
 
@@ -32,17 +34,23 @@
         <param name="yPercent">81</param>
         <param name="widthPercent">20</param>
         <param name="heightPercent">20</param>
+        <param name="penWidth">2</param>
+        <param name="radius">3</param>
     </drawable>
     <drawable id="HighlightMM" class="HighlightDrawable">
         <param name="xPercent">50</param>
         <param name="yPercent">81</param>
         <param name="widthPercent">20</param>
         <param name="heightPercent">20</param>
+        <param name="penWidth">2</param>
+        <param name="radius">3</param>
     </drawable>
     <drawable id="HighlightSS" class="HighlightDrawable">
         <param name="xPercent">74</param>
         <param name="yPercent">81</param>
         <param name="widthPercent">20</param>
         <param name="heightPercent">20</param>
+        <param name="penWidth">2</param>
+        <param name="radius">3</param>
     </drawable>
 </layout>
