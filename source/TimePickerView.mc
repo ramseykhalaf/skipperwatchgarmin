@@ -8,7 +8,6 @@ import Toybox.WatchUi;
 
 class TimePickerView extends WatchUi.View {
     private const ROW_SPACE = 0;
-    private const DIGIT_COLON_SPACE = 2;
     private const LINE_WIDTH = 6;
     private const HIGHLIGHT_VERTICAL_SPACE = 0;
     private const HIGHLIGHT_HORIZONTAL_SPACE = 0;
@@ -23,50 +22,44 @@ class TimePickerView extends WatchUi.View {
     
     // Stored positions
     private var _screenWidth as Number;
-    private var _clockFontHeight as Number;
     private var _countdownFontHeight as Number;
     private var _countdownFontSize; // Graphics.FontReference - stored font constant
     private var _targetFontHeight as Number;
     private var _targetDoubleDigitFontWidth as Number;
-    private var _targetColonFontWidth as Number;
     
     // Countdown font dimensions (stored for both font sizes to avoid recalculating on every update)
     private var _countdownHoursFontHeight as Number;
     private var _countdownMinutesFontHeight as Number;
     
     // Time picker positions
-    private var _hourX as Number;
-    private var _minuteX as Number;
-    private var _secondX as Number;
-    private var _row3Y as Number;
+    private var _targetHourX as Number;
+    private var _targetMinuteX as Number;
+    private var _targetSecondX as Number;
+    private var _targetY as Number;
 
     // Countdown positions
-    private var _centerX as Number;
-    private var _row2X as Number;
-    private var _row2Y as Number;
+    private var _countdownX as Number;
+    private var _countdownY as Number;
     private var _countdownStr as String;
     
     function initialize() {
         View.initialize();
         
         // Initialize position variables (will be set properly in onLayout)
-        _hourX = 0;
-        _minuteX = 0;
-        _secondX = 0;
-        _row3Y = 0;
+        _targetHourX = 0;
+        _targetMinuteX = 0;
+        _targetSecondX = 0;
+        _targetY = 0;
 
-        _centerX = 0;
-        _row2X = 0;
-        _row2Y = 0;
+        _countdownX = 0;
+        _countdownY = 0;
         
         _screenWidth = 0;
         
-        _clockFontHeight = 0;
         _countdownFontHeight = 0;
         _countdownFontSize = COUNTDOWN_MINUTES_FONT_SIZE;
         _targetFontHeight = 0;
         _targetDoubleDigitFontWidth = 0;
-        _targetColonFontWidth = 0;
         _countdownHoursFontHeight = 0;
         _countdownMinutesFontHeight = 0;
 
@@ -102,46 +95,37 @@ class TimePickerView extends WatchUi.View {
         setLayout(Rez.Layouts.MainLayout(dc));
 
         // Get font dimensions
-        _clockFontHeight = dc.getFontHeight(CLOCK_FONT_SIZE);
-        
         _countdownHoursFontHeight = dc.getFontHeight(COUNTDOWN_HOURS_FONT_SIZE);
         _countdownMinutesFontHeight = dc.getFontHeight(COUNTDOWN_MINUTES_FONT_SIZE);
         
         _targetFontHeight = dc.getFontHeight(TARGET_FONT_SIZE);
         _targetDoubleDigitFontWidth = dc.getTextWidthInPixels("00", Graphics.FONT_NUMBER_MEDIUM);
-        _targetColonFontWidth = dc.getTextWidthInPixels(":", Graphics.FONT_NUMBER_MEDIUM);
         
         // Get screen dimensions
         _screenWidth = dc.getWidth();
-        var height = dc.getHeight();
-        _centerX = _screenWidth / 2;
-   
-        // Calculate positions for Row 2 (50%)
-        _row2Y = height / 2;
-        _row2X = _centerX;
         
-        // Calculate positions for Row 3 (80%)
-        _row3Y = (height * 0.8).toNumber();
-        
-        // Calculate x positions for time picker elements relative to center
-        // Layout: hours : minutes : seconds
-        // Minutes is at center, so we calculate offsets from center
-        var minutesX = _centerX;
-        _minuteX = minutesX;
-        
-        // Colon 2 is to the right of minutes
-        var colon2X = minutesX + (_targetDoubleDigitFontWidth / 2) + DIGIT_COLON_SPACE + (_targetColonFontWidth / 2);
-        
-        // Seconds is to the right of colon 2
-        var secondX = colon2X + (_targetColonFontWidth / 2) + DIGIT_COLON_SPACE + (_targetDoubleDigitFontWidth / 2);
-        _secondX = secondX;
-        
-        // Colon 1 is to the left of minutes
-        var colon1X = minutesX - (_targetDoubleDigitFontWidth / 2) - DIGIT_COLON_SPACE - (_targetColonFontWidth / 2);
-        
-        // Hours is to the left of colon 1
-        var hourX = colon1X - (_targetColonFontWidth / 2) - DIGIT_COLON_SPACE - (_targetDoubleDigitFontWidth / 2);
-        _hourX = hourX;
+        // Update stored positions by querying the layout elements
+        var countdownLabel = View.findDrawableById("CountdownLabel") as WatchUi.Text;
+        if (countdownLabel != null) {
+            _countdownX = countdownLabel.locX;
+            _countdownY = countdownLabel.locY;
+        }
+
+        var targetHH = View.findDrawableById("TargetHH") as WatchUi.Text;
+        if (targetHH != null) {
+            _targetHourX = targetHH.locX;
+            _targetY = targetHH.locY;
+        }
+
+        var targetMM = View.findDrawableById("TargetMM") as WatchUi.Text;
+        if (targetMM != null) {
+            _targetMinuteX = targetMM.locX;
+        }
+
+        var targetSS = View.findDrawableById("TargetSS") as WatchUi.Text;
+        if (targetSS != null) {
+            _targetSecondX = targetSS.locX;
+        }
     }
 
     function onUpdate(dc as Dc) as Void {
@@ -187,22 +171,20 @@ class TimePickerView extends WatchUi.View {
         }
         countdownLabel.setFont(_countdownFontSize);
 
-        // Update Target Label
+        // Update Target Labels
         var targetInfo = Gregorian.info(_delegate.getTargetMoment(), Time.FORMAT_SHORT);
-        var targetTimeStr = Lang.format("$1$:$2$:$3$", [
-            targetInfo.hour.format("%02d"),
-            targetInfo.min.format("%02d"),
-            targetInfo.sec.format("%02d")
-        ]);
-        var targetLabel = View.findDrawableById("TargetLabel") as WatchUi.Text;
-        targetLabel.setText(targetTimeStr);
+        (View.findDrawableById("TargetHH") as WatchUi.Text).setText(targetInfo.hour.format("%02d"));
+        (View.findDrawableById("TargetColon1") as WatchUi.Text).setText(":");
+        (View.findDrawableById("TargetMM") as WatchUi.Text).setText(targetInfo.min.format("%02d"));
+        (View.findDrawableById("TargetColon2") as WatchUi.Text).setText(":");
+        (View.findDrawableById("TargetSS") as WatchUi.Text).setText(targetInfo.sec.format("%02d"));
 
         // Call the parent onUpdate to draw the layout
         View.onUpdate(dc);
         
         // Draw horizontal lines between rows at half ROW_SPACE, accounting for font height
-        var lineY1 = _row2Y - _countdownMinutesFontHeight/2 - ROW_SPACE/2;
-        var lineY2 = _row2Y + _countdownMinutesFontHeight/2 - ROW_SPACE/2;
+        var lineY1 = _countdownY - _countdownMinutesFontHeight/2 - ROW_SPACE/2;
+        var lineY2 = _countdownY + _countdownMinutesFontHeight/2 - ROW_SPACE/2;
         drawDividers(dc, timeDifference, lineY1, lineY2);
         
         // Draw white outline boxes for active field on top (custom drawing)
@@ -216,22 +198,22 @@ class TimePickerView extends WatchUi.View {
         var mode = _delegate.getMode();
         var targetHighlightHeight = _targetFontHeight + (HIGHLIGHT_VERTICAL_SPACE * 2);
         var targetHighlightWidth = _targetDoubleDigitFontWidth + (HIGHLIGHT_HORIZONTAL_SPACE * 2);
-        var highlightY = _row3Y - (targetHighlightHeight / 2);
+        var highlightY = _targetY - (targetHighlightHeight / 2);
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
 
         if (mode == :hours) {
-            dc.drawRectangle(_hourX - (targetHighlightWidth / 2), highlightY, targetHighlightWidth, targetHighlightHeight);
+            dc.drawRectangle(_targetHourX - (targetHighlightWidth / 2), highlightY, targetHighlightWidth, targetHighlightHeight);
         } else if (mode == :minutes) {
-            dc.drawRectangle(_minuteX - (targetHighlightWidth / 2), highlightY, targetHighlightWidth, targetHighlightHeight);
+            dc.drawRectangle(_targetMinuteX - (targetHighlightWidth / 2), highlightY, targetHighlightWidth, targetHighlightHeight);
         } else if (mode == :seconds) {
-            dc.drawRectangle(_secondX - (targetHighlightWidth / 2), highlightY, targetHighlightWidth, targetHighlightHeight);
+            dc.drawRectangle(_targetSecondX - (targetHighlightWidth / 2), highlightY, targetHighlightWidth, targetHighlightHeight);
         } else if (mode == :countdown) {
 
             var countdownHighlightHeight = _countdownFontHeight + (HIGHLIGHT_VERTICAL_SPACE * 2);
             var countdownHighlightWidth = dc.getTextWidthInPixels(_countdownStr, _countdownFontSize) + (HIGHLIGHT_HORIZONTAL_SPACE * 2);
-            var countdownHighlightY = _row2Y - (countdownHighlightHeight / 2);
-            dc.drawRectangle(_row2X - (countdownHighlightWidth / 2), countdownHighlightY, countdownHighlightWidth, countdownHighlightHeight);
+            var countdownHighlightY = _countdownY - (countdownHighlightHeight / 2);
+            dc.drawRectangle(_countdownX - (countdownHighlightWidth / 2), countdownHighlightY, countdownHighlightWidth, countdownHighlightHeight);
         }
     }
     
