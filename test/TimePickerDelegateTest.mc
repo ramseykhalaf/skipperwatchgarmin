@@ -23,7 +23,7 @@ class TimePickerDelegateTest {
 
     (:test)
     function testInitializationRounding(logger as Logger) as Boolean {
-        // Create 11:22:33
+        // Use a known moment to test rounding
         var options = {
             :year   => 2024,
             :month  => 1,
@@ -36,10 +36,15 @@ class TimePickerDelegateTest {
 
         var delegate = new TestableTimePickerDelegate(mockNow);
         var targetMoment = delegate.getTargetMoment();
-        var info = Gregorian.info(targetMoment, Time.FORMAT_SHORT);
+        
+        var nowInfo = Gregorian.info(mockNow, Time.FORMAT_SHORT);
+        var targetInfo = Gregorian.info(targetMoment, Time.FORMAT_SHORT);
 
-        // Expect 11:22:33 + 3m = 11:25:33, rounded to 11:25:00
-        return info.hour == 11 && info.min == 25 && info.sec == 0;
+        // Expect target to be now + 3m, rounded down to nearest minute.
+        // We use relative comparison to handle any simulator timezone offsets consistently.
+        return targetInfo.hour == nowInfo.hour && 
+               targetInfo.min == nowInfo.min + 3 && 
+               targetInfo.sec == 0;
     }
 
     (:test)

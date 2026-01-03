@@ -86,7 +86,7 @@ class TimePickerDelegate extends WatchUi.BehaviorDelegate {
     
     function setCountdownSecondsToZero() as Void {
         var clockTime = System.getClockTime();
-        var countdownSeconds = calculateCountdownSeconds(Time.now());
+        var countdownSeconds = calculateCountdownSeconds(getCurrentTime());
         var snappedTime = calculateTargetTimeToSnapCountdownSecondsToZero(
             clockTime.hour, clockTime.min, clockTime.sec, countdownSeconds);
         _targetMoment = setTargetMomentToTimeOfDay(_targetMoment, snappedTime[:hour], snappedTime[:minute], snappedTime[:second]);
@@ -98,16 +98,13 @@ class TimePickerDelegate extends WatchUi.BehaviorDelegate {
     }
 
     static function setTargetMomentToTimeOfDay(moment as Time.Moment, hour as Number, minute as Number, second as Number) as Time.Moment {
-        var targetTimeInfo = Gregorian.info(moment, Time.FORMAT_SHORT);
-        var options = {
-            :year   => targetTimeInfo.year,
-            :month  => targetTimeInfo.month,
-            :day    => targetTimeInfo.day,
-            :hour   => hour,
-            :minute => minute,
-            :second => second
-        };
-        return Gregorian.moment(options);
+        var info = Gregorian.info(moment, Time.FORMAT_SHORT);
+        var duration = new Time.Duration(
+            (hour - info.hour) * 3600 +
+            (minute - info.min) * 60 +
+            (second - info.sec)
+        );
+        return moment.add(duration);
     }
 
     static function calculateTargetTimeToSnapCountdownSecondsToZero(
