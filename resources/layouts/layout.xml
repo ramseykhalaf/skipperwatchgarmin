@@ -1,18 +1,19 @@
 <layout id="MainLayout">
+    <label id="ClockLabel" x="50%" y="19%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" />
+
     <drawable id="Divider1" class="DividerDrawable">
         <param name="yPercent">32</param>
         <param name="height">6</param>
     </drawable>
-    
-    <label id="ClockLabel" x="50%" y="19%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" />
 
-    <label id="CountdownLabel" x="50%" y="50%" font="Graphics.FONT_NUMBER_THAI_HOT" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" />
+
+    <label id="CountdownLabel" x="50%" y="48%" font="Graphics.FONT_NUMBER_THAI_HOT" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" />
     
     <drawable id="Divider2" class="DividerDrawable">
         <param name="yPercent">68</param>
         <param name="height">6</param>
     </drawable>
-    
+
     <label id="TargetHH" x="26%" y="81%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" />
     <label id="TargetColon1" x="38%" y="81%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" />
     <label id="TargetMM" x="50%" y="81%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" />
