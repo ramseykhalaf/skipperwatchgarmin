@@ -27,6 +27,26 @@ class TimePickerView extends WatchUi.View {
         "50", "51", "52", "53", "54", "55", "56", "57", "58", "59"
     ];
 
+    // Pre-computed negative signed string lookups for countdown minutes (0-59)
+    private static var NEGATIVE_SIGNED_60 as Array<String> = [
+        "-0", "-1", "-2", "-3", "-4", "-5", "-6", "-7", "-8", "-9",
+        "-10", "-11", "-12", "-13", "-14", "-15", "-16", "-17", "-18", "-19",
+        "-20", "-21", "-22", "-23", "-24", "-25", "-26", "-27", "-28", "-29",
+        "-30", "-31", "-32", "-33", "-34", "-35", "-36", "-37", "-38", "-39",
+        "-40", "-41", "-42", "-43", "-44", "-45", "-46", "-47", "-48", "-49",
+        "-50", "-51", "-52", "-53", "-54", "-55", "-56", "-57", "-58", "-59"
+    ];
+
+    // Pre-computed positive signed string lookups for countdown minutes (0-59)
+    private static var POSITIVE_SIGNED_60 as Array<String> = [
+        "+0", "+1", "+2", "+3", "+4", "+5", "+6", "+7", "+8", "+9",
+        "+10", "+11", "+12", "+13", "+14", "+15", "+16", "+17", "+18", "+19",
+        "+20", "+21", "+22", "+23", "+24", "+25", "+26", "+27", "+28", "+29",
+        "+30", "+31", "+32", "+33", "+34", "+35", "+36", "+37", "+38", "+39",
+        "+40", "+41", "+42", "+43", "+44", "+45", "+46", "+47", "+48", "+49",
+        "+50", "+51", "+52", "+53", "+54", "+55", "+56", "+57", "+58", "+59"
+    ];
+
     private var _delegate as TimePickerDelegate?;
     private var _timer as Timer.Timer;
 
@@ -36,13 +56,11 @@ class TimePickerView extends WatchUi.View {
     private var _clockSS;
 
     // Cached drawable references - Countdown with hours row
-    private var _countdownHoursSign;
     private var _countdownHoursHH;
     private var _countdownHoursMM;
     private var _countdownHoursSS;
 
     // Cached drawable references - Countdown without hours row
-    private var _countdownMinutesSign;
     private var _countdownMinutesMM;
     private var _countdownMinutesSS;
 
@@ -106,13 +124,11 @@ class TimePickerView extends WatchUi.View {
         _clockSS = View.findDrawableById("ClockSS") as WatchUi.Text;
 
         // Cache drawable references - Countdown with hours row
-        _countdownHoursSign = View.findDrawableById("CountdownHoursSign") as WatchUi.Text;
         _countdownHoursHH = View.findDrawableById("CountdownHoursHH") as WatchUi.Text;
         _countdownHoursMM = View.findDrawableById("CountdownHoursMM") as WatchUi.Text;
         _countdownHoursSS = View.findDrawableById("CountdownHoursSS") as WatchUi.Text;
 
         // Cache drawable references - Countdown without hours row
-        _countdownMinutesSign = View.findDrawableById("CountdownMinutesSign") as WatchUi.Text;
         _countdownMinutesMM = View.findDrawableById("CountdownMinutesMM") as WatchUi.Text;
         _countdownMinutesSS = View.findDrawableById("CountdownMinutesSS") as WatchUi.Text;
 
@@ -122,7 +138,6 @@ class TimePickerView extends WatchUi.View {
         _countdownMinutesColon = View.findDrawableById("CountdownMinutesColon") as WatchUi.Text;
 
         // Initialize countdown row visibility (mins row visible by default)
-        _countdownHoursSign.setVisible(false);
         _countdownHoursHH.setVisible(false);
         _countdownHoursMM.setVisible(false);
         _countdownHoursSS.setVisible(false);
@@ -168,19 +183,17 @@ class TimePickerView extends WatchUi.View {
 
         if (hoursPresent) {
             // Show hours row, hide mins row
-            _countdownHoursSign.setText(sign);
-            _countdownHoursHH.setText(hours.format("%d"));
+            var hoursIndex = hours < 60 ? hours : 59;
+            _countdownHoursHH.setText(timeDifference < 0 ? NEGATIVE_SIGNED_60[hoursIndex] : POSITIVE_SIGNED_60[hoursIndex]);
             _countdownHoursMM.setText(PADDED_60[minutes]);
             _countdownHoursSS.setText(PADDED_60[seconds]);
 
             if (!_hoursRowVisible) {
-                _countdownHoursSign.setVisible(true);
                 _countdownHoursHH.setVisible(true);
                 _countdownHoursMM.setVisible(true);
                 _countdownHoursSS.setVisible(true);
                 _countdownHoursColon1.setVisible(true);
                 _countdownHoursColon2.setVisible(true);
-                _countdownMinutesSign.setVisible(false);
                 _countdownMinutesMM.setVisible(false);
                 _countdownMinutesSS.setVisible(false);
                 _countdownMinutesColon.setVisible(false);
@@ -188,18 +201,15 @@ class TimePickerView extends WatchUi.View {
             }
         } else {
             // Show mins row, hide hours row
-            _countdownMinutesSign.setText(sign);
-            _countdownMinutesMM.setText(UNPADDED_60[minutes]);
+            _countdownMinutesMM.setText(timeDifference < 0 ? NEGATIVE_SIGNED_60[minutes] : POSITIVE_SIGNED_60[minutes]);
             _countdownMinutesSS.setText(PADDED_60[seconds]);
 
             if (_hoursRowVisible) {
-                _countdownHoursSign.setVisible(false);
                 _countdownHoursHH.setVisible(false);
                 _countdownHoursMM.setVisible(false);
                 _countdownHoursSS.setVisible(false);
                 _countdownHoursColon1.setVisible(false);
                 _countdownHoursColon2.setVisible(false);
-                _countdownMinutesSign.setVisible(true);
                 _countdownMinutesMM.setVisible(true);
                 _countdownMinutesSS.setVisible(true);
                 _countdownMinutesColon.setVisible(true);
