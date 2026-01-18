@@ -26,5 +26,5 @@ else
 fi
 
 # Load the app on the simulator
-monkeydo bin/skipperwatch.prg "$DEVICE_ID"
+monkeydo bin/skipperwatch.prg "$DEVICE_ID" &
 
