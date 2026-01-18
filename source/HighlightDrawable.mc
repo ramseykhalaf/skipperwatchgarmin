@@ -11,6 +11,13 @@ class HighlightDrawable extends WatchUi.Drawable {
     private var _radius as Number;
     private var _visible as Boolean;
 
+    // Cached pixel coordinates
+    private var _cachedX as Number;
+    private var _cachedY as Number;
+    private var _cachedWidth as Number;
+    private var _cachedHeight as Number;
+    private var _coordinatesCached as Boolean;
+
     function initialize(params as Dictionary) {
         Drawable.initialize(params);
         _xPercent = params.hasKey(:xPercent) ? params[:xPercent] : 50;
@@ -20,6 +27,13 @@ class HighlightDrawable extends WatchUi.Drawable {
         _penWidth = params.hasKey(:penWidth) ? params[:penWidth] : 2;
         _radius = params.hasKey(:radius) ? params[:radius] : 3;
         _visible = false;
+
+        // Initialize cached values
+        _cachedX = 0;
+        _cachedY = 0;
+        _cachedWidth = 0;
+        _cachedHeight = 0;
+        _coordinatesCached = false;
     }
 
     function setVisible(visible as Boolean) as Void {
@@ -31,17 +45,19 @@ class HighlightDrawable extends WatchUi.Drawable {
             return;
         }
 
-        var screenWidth = dc.getWidth();
-        var screenHeight = dc.getHeight();
-
-        var width = (screenWidth * _widthPercent) / 100;
-        var height = (screenHeight * _heightPercent) / 100;
-        var x = (screenWidth * _xPercent) / 100 - (width / 2);
-        var y = (screenHeight * _yPercent) / 100 - (height / 2);
+        if (!_coordinatesCached) {
+            var screenWidth = dc.getWidth();
+            var screenHeight = dc.getHeight();
+            _cachedWidth = (screenWidth * _widthPercent) / 100;
+            _cachedHeight = (screenHeight * _heightPercent) / 100;
+            _cachedX = (screenWidth * _xPercent) / 100 - (_cachedWidth / 2);
+            _cachedY = (screenHeight * _yPercent) / 100 - (_cachedHeight / 2);
+            _coordinatesCached = true;
+        }
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(_penWidth);
-        dc.drawRoundedRectangle(x, y, width, height, _radius);
+        dc.drawRoundedRectangle(_cachedX, _cachedY, _cachedWidth, _cachedHeight, _radius);
         dc.setPenWidth(1);
     }
 }

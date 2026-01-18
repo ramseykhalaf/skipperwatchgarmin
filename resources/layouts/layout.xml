@@ -1,13 +1,24 @@
 <layout id="MainLayout">
 
-    <label id="ClockLabel" x="50%" y="19%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" />
+    <!-- Clock time labels (split for string lookup optimization) -->
+    <label id="ClockHH" x="26%" y="19%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" />
+    <label id="ClockColon1" x="38%" y="19%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" text=":" />
+    <label id="ClockMM" x="50%" y="19%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" />
+    <label id="ClockColon2" x="62%" y="19%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" text=":" />
+    <label id="ClockSS" x="74%" y="19%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" />
 
     <drawable id="Divider1" class="DividerDrawable">
         <param name="yPercent">32</param>
         <param name="height">6</param>
     </drawable>
 
-    <label id="CountdownLabel" x="50%" y="48%" font="Graphics.FONT_NUMBER_THAI_HOT" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" />
+    <!-- Countdown labels (split for string lookup optimization) -->
+    <label id="CountdownSign" x="14%" y="48%" font="Graphics.FONT_NUMBER_THAI_HOT" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" />
+    <label id="CountdownHH" x="22%" y="48%" font="Graphics.FONT_NUMBER_THAI_HOT" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" />
+    <label id="CountdownColon1" x="38%" y="48%" font="Graphics.FONT_NUMBER_THAI_HOT" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" text=":" />
+    <label id="CountdownMM" x="50%" y="48%" font="Graphics.FONT_NUMBER_THAI_HOT" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" />
+    <label id="CountdownColon2" x="62%" y="48%" font="Graphics.FONT_NUMBER_THAI_HOT" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" text=":" />
+    <label id="CountdownSS" x="78%" y="48%" font="Graphics.FONT_NUMBER_THAI_HOT" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" />
     <drawable id="HighlightCountdown" class="HighlightDrawable">
         <param name="xPercent">50</param>
         <param name="yPercent">50</param>
@@ -24,9 +35,9 @@
     </drawable>
 
     <label id="TargetHH" x="26%" y="80%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" />
-    <label id="TargetColon1" x="38%" y="80%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" />
+    <label id="TargetColon1" x="38%" y="80%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" text=":" />
     <label id="TargetMM" x="50%" y="80%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" />
-    <label id="TargetColon2" x="62%" y="80%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" />
+    <label id="TargetColon2" x="62%" y="80%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" text=":" />
     <label id="TargetSS" x="74%" y="80%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" />
 
     <drawable id="HighlightHH" class="HighlightDrawable">

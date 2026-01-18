@@ -76,14 +76,6 @@ class TimePickerDelegate extends WatchUi.BehaviorDelegate {
         WatchUi.requestUpdate();
     }
     
-    function incrementCountdown() as Void {
-        incrementSecond();
-    }
-    
-    function decrementCountdown() as Void {
-        decrementSecond();
-    }
-    
     function setCountdownSecondsToZero() as Void {
         var clockTime = System.getClockTime();
         var countdownSeconds = calculateCountdownSeconds(getCurrentTime());
@@ -142,8 +134,6 @@ class TimePickerDelegate extends WatchUi.BehaviorDelegate {
         } else if (_mode == :minutes) {
             setMode(:seconds);
         } else if (_mode == :seconds) {
-            setMode(:countdown);
-        } else {
             setCountdownSecondsToZero();
         }
         return true;
@@ -155,11 +145,8 @@ class TimePickerDelegate extends WatchUi.BehaviorDelegate {
         } else if (_mode == :minutes) {
             setMode(:hours);
             return true;
-        } else if (_mode == :seconds) {
+        } else { // :seconds
             setMode(:minutes);
-            return true;
-        } else {
-            setMode(:seconds);
             return true;
         }
     }
@@ -173,8 +160,6 @@ class TimePickerDelegate extends WatchUi.BehaviorDelegate {
                 incrementMinute();
             } else if (_mode == :seconds) {
                 incrementSecond();
-            } else if (_mode == :countdown) {
-                incrementCountdown();
             }
             return true;
         } else if (key == WatchUi.KEY_DOWN) {
@@ -184,8 +169,6 @@ class TimePickerDelegate extends WatchUi.BehaviorDelegate {
                 decrementMinute();
             } else if (_mode == :seconds) {
                 decrementSecond();
-            } else if (_mode == :countdown) {
-                decrementCountdown();
             }
             return true;
         } else if (key == WatchUi.KEY_ENTER) {
