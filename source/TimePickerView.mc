@@ -36,15 +36,20 @@ class TimePickerView extends WatchUi.View {
     private var _clockSS;
 
     // Cached drawable references - Countdown with hours row
-    private var _cdHoursSign;
-    private var _cdHoursHH;
-    private var _cdHoursMM;
-    private var _cdHoursSS;
+    private var _countdownHoursSign;
+    private var _countdownHoursHH;
+    private var _countdownHoursMM;
+    private var _countdownHoursSS;
 
     // Cached drawable references - Countdown without hours row
-    private var _cdMinsSign;
-    private var _cdMinsMM;
-    private var _cdMinsSS;
+    private var _countdownMinutesSign;
+    private var _countdownMinutesMM;
+    private var _countdownMinutesSS;
+
+    // Cached drawable references - Countdown colons
+    private var _countdownHoursColon1;
+    private var _countdownHoursColon2;
+    private var _countdownMinutesColon;
 
     // Cached drawable references - Target
     private var _targetHH;
@@ -101,21 +106,28 @@ class TimePickerView extends WatchUi.View {
         _clockSS = View.findDrawableById("ClockSS") as WatchUi.Text;
 
         // Cache drawable references - Countdown with hours row
-        _cdHoursSign = View.findDrawableById("CdHoursSign") as WatchUi.Text;
-        _cdHoursHH = View.findDrawableById("CdHoursHH") as WatchUi.Text;
-        _cdHoursMM = View.findDrawableById("CdHoursMM") as WatchUi.Text;
-        _cdHoursSS = View.findDrawableById("CdHoursSS") as WatchUi.Text;
+        _countdownHoursSign = View.findDrawableById("CountdownHoursSign") as WatchUi.Text;
+        _countdownHoursHH = View.findDrawableById("CountdownHoursHH") as WatchUi.Text;
+        _countdownHoursMM = View.findDrawableById("CountdownHoursMM") as WatchUi.Text;
+        _countdownHoursSS = View.findDrawableById("CountdownHoursSS") as WatchUi.Text;
 
         // Cache drawable references - Countdown without hours row
-        _cdMinsSign = View.findDrawableById("CdMinsSign") as WatchUi.Text;
-        _cdMinsMM = View.findDrawableById("CdMinsMM") as WatchUi.Text;
-        _cdMinsSS = View.findDrawableById("CdMinsSS") as WatchUi.Text;
+        _countdownMinutesSign = View.findDrawableById("CountdownMinutesSign") as WatchUi.Text;
+        _countdownMinutesMM = View.findDrawableById("CountdownMinutesMM") as WatchUi.Text;
+        _countdownMinutesSS = View.findDrawableById("CountdownMinutesSS") as WatchUi.Text;
+
+        // Cache drawable references - Countdown colons
+        _countdownHoursColon1 = View.findDrawableById("CountdownHoursColon1") as WatchUi.Text;
+        _countdownHoursColon2 = View.findDrawableById("CountdownHoursColon2") as WatchUi.Text;
+        _countdownMinutesColon = View.findDrawableById("CountdownMinutesColon") as WatchUi.Text;
 
         // Initialize countdown row visibility (mins row visible by default)
-        _cdHoursSign.setVisible(false);
-        _cdHoursHH.setVisible(false);
-        _cdHoursMM.setVisible(false);
-        _cdHoursSS.setVisible(false);
+        _countdownHoursSign.setVisible(false);
+        _countdownHoursHH.setVisible(false);
+        _countdownHoursMM.setVisible(false);
+        _countdownHoursSS.setVisible(false);
+        _countdownHoursColon1.setVisible(false);
+        _countdownHoursColon2.setVisible(false);
         _hoursRowVisible = false;
 
         // Cache drawable references - Target
@@ -156,35 +168,41 @@ class TimePickerView extends WatchUi.View {
 
         if (hoursPresent) {
             // Show hours row, hide mins row
-            _cdHoursSign.setText(sign);
-            _cdHoursHH.setText(hours.format("%d"));
-            _cdHoursMM.setText(PADDED_60[minutes]);
-            _cdHoursSS.setText(PADDED_60[seconds]);
+            _countdownHoursSign.setText(sign);
+            _countdownHoursHH.setText(hours.format("%d"));
+            _countdownHoursMM.setText(PADDED_60[minutes]);
+            _countdownHoursSS.setText(PADDED_60[seconds]);
 
             if (!_hoursRowVisible) {
-                _cdHoursSign.setVisible(true);
-                _cdHoursHH.setVisible(true);
-                _cdHoursMM.setVisible(true);
-                _cdHoursSS.setVisible(true);
-                _cdMinsSign.setVisible(false);
-                _cdMinsMM.setVisible(false);
-                _cdMinsSS.setVisible(false);
+                _countdownHoursSign.setVisible(true);
+                _countdownHoursHH.setVisible(true);
+                _countdownHoursMM.setVisible(true);
+                _countdownHoursSS.setVisible(true);
+                _countdownHoursColon1.setVisible(true);
+                _countdownHoursColon2.setVisible(true);
+                _countdownMinutesSign.setVisible(false);
+                _countdownMinutesMM.setVisible(false);
+                _countdownMinutesSS.setVisible(false);
+                _countdownMinutesColon.setVisible(false);
                 _hoursRowVisible = true;
             }
         } else {
             // Show mins row, hide hours row
-            _cdMinsSign.setText(sign);
-            _cdMinsMM.setText(UNPADDED_60[minutes]);
-            _cdMinsSS.setText(PADDED_60[seconds]);
+            _countdownMinutesSign.setText(sign);
+            _countdownMinutesMM.setText(UNPADDED_60[minutes]);
+            _countdownMinutesSS.setText(PADDED_60[seconds]);
 
             if (_hoursRowVisible) {
-                _cdHoursSign.setVisible(false);
-                _cdHoursHH.setVisible(false);
-                _cdHoursMM.setVisible(false);
-                _cdHoursSS.setVisible(false);
-                _cdMinsSign.setVisible(true);
-                _cdMinsMM.setVisible(true);
-                _cdMinsSS.setVisible(true);
+                _countdownHoursSign.setVisible(false);
+                _countdownHoursHH.setVisible(false);
+                _countdownHoursMM.setVisible(false);
+                _countdownHoursSS.setVisible(false);
+                _countdownHoursColon1.setVisible(false);
+                _countdownHoursColon2.setVisible(false);
+                _countdownMinutesSign.setVisible(true);
+                _countdownMinutesMM.setVisible(true);
+                _countdownMinutesSS.setVisible(true);
+                _countdownMinutesColon.setVisible(true);
                 _hoursRowVisible = false;
             }
         }
