@@ -7,9 +7,6 @@ import Toybox.Timer;
 import Toybox.WatchUi;
 
 class TimePickerView extends WatchUi.View {
-    private const COUNTDOWN_MINUTES_FONT_SIZE = Graphics.FONT_NUMBER_THAI_HOT;
-    private const COUNTDOWN_HOURS_FONT_SIZE = Graphics.FONT_NUMBER_HOT;
-
     // Pre-computed string lookups for minutes/seconds/hours (0-59, hours use 0-23)
     private static var PADDED_60 as Array<String> = [
         "00", "01", "02", "03", "04", "05", "06", "07", "08", "09",
@@ -33,20 +30,21 @@ class TimePickerView extends WatchUi.View {
     private var _delegate as TimePickerDelegate?;
     private var _timer as Timer.Timer;
 
-    // Stored font dimensions
-    private var _countdownFontSize; // Graphics.FontReference - stored font constant
-
     // Cached drawable references - Clock
     private var _clockHH;
     private var _clockMM;
     private var _clockSS;
 
-    // Cached drawable references - Countdown
-    private var _countdownSign;
-    private var _countdownHH;
-    private var _countdownColon1;
-    private var _countdownMM;
-    private var _countdownSS;
+    // Cached drawable references - Countdown with hours row
+    private var _cdHoursSign;
+    private var _cdHoursHH;
+    private var _cdHoursMM;
+    private var _cdHoursSS;
+
+    // Cached drawable references - Countdown without hours row
+    private var _cdMinsSign;
+    private var _cdMinsMM;
+    private var _cdMinsSS;
 
     // Cached drawable references - Target
     private var _targetHH;
@@ -61,10 +59,12 @@ class TimePickerView extends WatchUi.View {
     private var _highlightSS;
     private var _highlightCountdown;
 
+    // Track which countdown row is visible
+    private var _hoursRowVisible as Boolean = false;
+
     function initialize() {
         View.initialize();
-
-        _countdownFontSize = COUNTDOWN_MINUTES_FONT_SIZE;
+        _hoursRowVisible = false;
 
         // Create timer to update current time display every second
         _timer = new Timer.Timer();
@@ -100,12 +100,23 @@ class TimePickerView extends WatchUi.View {
         _clockMM = View.findDrawableById("ClockMM") as WatchUi.Text;
         _clockSS = View.findDrawableById("ClockSS") as WatchUi.Text;
 
-        // Cache drawable references - Countdown
-        _countdownSign = View.findDrawableById("CountdownSign") as WatchUi.Text;
-        _countdownHH = View.findDrawableById("CountdownHH") as WatchUi.Text;
-        _countdownColon1 = View.findDrawableById("CountdownColon1") as WatchUi.Text;
-        _countdownMM = View.findDrawableById("CountdownMM") as WatchUi.Text;
-        _countdownSS = View.findDrawableById("CountdownSS") as WatchUi.Text;
+        // Cache drawable references - Countdown with hours row
+        _cdHoursSign = View.findDrawableById("CdHoursSign") as WatchUi.Text;
+        _cdHoursHH = View.findDrawableById("CdHoursHH") as WatchUi.Text;
+        _cdHoursMM = View.findDrawableById("CdHoursMM") as WatchUi.Text;
+        _cdHoursSS = View.findDrawableById("CdHoursSS") as WatchUi.Text;
+
+        // Cache drawable references - Countdown without hours row
+        _cdMinsSign = View.findDrawableById("CdMinsSign") as WatchUi.Text;
+        _cdMinsMM = View.findDrawableById("CdMinsMM") as WatchUi.Text;
+        _cdMinsSS = View.findDrawableById("CdMinsSS") as WatchUi.Text;
+
+        // Initialize countdown row visibility (mins row visible by default)
+        _cdHoursSign.setVisible(false);
+        _cdHoursHH.setVisible(false);
+        _cdHoursMM.setVisible(false);
+        _cdHoursSS.setVisible(false);
+        _hoursRowVisible = false;
 
         // Cache drawable references - Target
         _targetHH = View.findDrawableById("TargetHH") as WatchUi.Text;
@@ -139,29 +150,44 @@ class TimePickerView extends WatchUi.View {
         var minutes = (absDifference % 3600) / 60;
         var seconds = absDifference % 60;
 
-        // Update countdown sign
-        _countdownSign.setText(timeDifference < 0 ? "-" : "+");
+        // Update countdown - use two overlapping rows, toggle visibility
+        var sign = timeDifference < 0 ? "-" : "+";
+        var hoursPresent = hours > 0;
 
-        // Update countdown hours (show/hide based on whether hours > 0)
-        if (hours > 0) {
-            _countdownHH.setText(hours.format("%d"));
-            _countdownColon1.setText(":");
-            _countdownMM.setText(PADDED_60[minutes]);
-            _countdownFontSize = COUNTDOWN_HOURS_FONT_SIZE;
+        if (hoursPresent) {
+            // Show hours row, hide mins row
+            _cdHoursSign.setText(sign);
+            _cdHoursHH.setText(hours.format("%d"));
+            _cdHoursMM.setText(PADDED_60[minutes]);
+            _cdHoursSS.setText(PADDED_60[seconds]);
+
+            if (!_hoursRowVisible) {
+                _cdHoursSign.setVisible(true);
+                _cdHoursHH.setVisible(true);
+                _cdHoursMM.setVisible(true);
+                _cdHoursSS.setVisible(true);
+                _cdMinsSign.setVisible(false);
+                _cdMinsMM.setVisible(false);
+                _cdMinsSS.setVisible(false);
+                _hoursRowVisible = true;
+            }
         } else {
-            _countdownHH.setText("");
-            _countdownColon1.setText("");
-            _countdownMM.setText(UNPADDED_60[minutes]);
-            _countdownFontSize = COUNTDOWN_MINUTES_FONT_SIZE;
-        }
-        _countdownSS.setText(PADDED_60[seconds]);
+            // Show mins row, hide hours row
+            _cdMinsSign.setText(sign);
+            _cdMinsMM.setText(UNPADDED_60[minutes]);
+            _cdMinsSS.setText(PADDED_60[seconds]);
 
-        // Set countdown font size based on whether hours are present
-        _countdownSign.setFont(_countdownFontSize);
-        _countdownHH.setFont(_countdownFontSize);
-        _countdownColon1.setFont(_countdownFontSize);
-        _countdownMM.setFont(_countdownFontSize);
-        _countdownSS.setFont(_countdownFontSize);
+            if (_hoursRowVisible) {
+                _cdHoursSign.setVisible(false);
+                _cdHoursHH.setVisible(false);
+                _cdHoursMM.setVisible(false);
+                _cdHoursSS.setVisible(false);
+                _cdMinsSign.setVisible(true);
+                _cdMinsMM.setVisible(true);
+                _cdMinsSS.setVisible(true);
+                _hoursRowVisible = false;
+            }
+        }
 
         // Update Target Labels using string lookups
         var targetInfo = Gregorian.info(_delegate.getTargetMoment(), Time.FORMAT_SHORT);
