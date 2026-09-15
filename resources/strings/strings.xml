@@ -3,6 +3,17 @@
 
     <string id="prompt">Click the menu button</string>
 
+    <string id="SessionName">Race</string>
+    <string id="CogCaption">COG °T</string>
+    <string id="SogCaption">SOG KTS</string>
+
+    <string id="MenuResume">Resume</string>
+    <string id="MenuSave">Save</string>
+    <string id="MenuDiscard">Discard</string>
+    <string id="DiscardTitle">Discard?</string>
+    <string id="MenuNo">No</string>
+    <string id="MenuYes">Yes</string>
+
     <string id="menu_label_1">Item 1</string>
     <string id="menu_label_2">Item 2</string>
 </strings>

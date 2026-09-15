@@ -7,6 +7,7 @@ import Toybox.WatchUi;
 class TimePickerDelegate extends WatchUi.BehaviorDelegate {
     private var _targetMoment as Time.Moment;
     private var _mode as Symbol; // :hours, :minutes, :seconds, :countdown
+    private var _recorder as TrackRecorder?;
 
     function initialize() {
         BehaviorDelegate.initialize();
@@ -21,6 +22,10 @@ class TimePickerDelegate extends WatchUi.BehaviorDelegate {
         _targetMoment = setTargetMomentToTimeOfDay(_targetMoment, targetInfo.hour, targetInfo.min, 0);
         
         _mode = :minutes;
+    }
+
+    function setRecorder(recorder as TrackRecorder?) as Void {
+        _recorder = recorder;
     }
 
     function getCurrentTime() as Time.Moment {
@@ -139,8 +144,28 @@ class TimePickerDelegate extends WatchUi.BehaviorDelegate {
         return true;
     }
 
+    // True on the tick where the countdown goes from before the gun to at or
+    // after it. Only the crossing counts, so returning to the countdown screen
+    // after the start does not bounce straight back to the race screen, but
+    // pushing the target out for a recall arms it again.
+    static function didRaceStart(previousCountdownSeconds as Number?, countdownSeconds as Number) as Boolean {
+        return (previousCountdownSeconds != null) && (previousCountdownSeconds < 0) && (countdownSeconds >= 0);
+    }
+
+    // Backing out of :hours mode exits the app, which is the moment a recorded
+    // track has to be saved or thrown away.
+    function shouldPromptToSaveTrack() as Boolean {
+        var recorder = _recorder;
+        return (_mode == :hours) && (recorder != null) && recorder.hasSession();
+    }
+
     function onBack() as Boolean {
         if (_mode == :hours) {
+            if (shouldPromptToSaveTrack()) {
+                // Save and Discard exit the app; Resume returns here.
+                SaveMenu.push(_recorder as TrackRecorder);
+                return true;
+            }
             return false;
         } else if (_mode == :minutes) {
             setMode(:hours);

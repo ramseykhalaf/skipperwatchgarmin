@@ -48,7 +48,9 @@ class TimePickerView extends WatchUi.View {
     ];
 
     private var _delegate as TimePickerDelegate?;
+    private var _recorder as TrackRecorder?;
     private var _timer as Timer.Timer;
+    private var _lastCountdownSeconds as Number?;
 
     // Cached drawable references - Clock
     private var _clockHH;
@@ -74,6 +76,9 @@ class TimePickerView extends WatchUi.View {
     private var _targetMM;
     private var _targetSS;
 
+    // Cached drawable reference - GPS fix quality indicator
+    private var _gpsIndicator;
+
     // Cached drawable references - Dividers and Highlights
     private var _divider1;
     private var _divider2;
@@ -96,8 +101,19 @@ class TimePickerView extends WatchUi.View {
     function setDelegate(delegate as TimePickerDelegate) as Void {
         _delegate = delegate;
     }
+
+    function setRecorder(recorder as TrackRecorder?) as Void {
+        _recorder = recorder;
+    }
     
     function onShow() as Void {
+        // Begin recording the track on first show; start() is idempotent, so
+        // coming back from a dialog does not disturb a session in progress.
+        var recorder = _recorder;
+        if (recorder != null) {
+            recorder.start();
+        }
+
         // Start timer when view is shown
         if (_timer != null) {
             _timer.start(method(:onTimer), 1000, true);
@@ -112,6 +128,19 @@ class TimePickerView extends WatchUi.View {
     }
     
     function onTimer() as Void {
+        var delegate = _delegate;
+        var recorder = _recorder;
+        if (delegate != null) {
+            var countdownSeconds = delegate.calculateCountdownSeconds(Time.now());
+            var previous = _lastCountdownSeconds;
+            _lastCountdownSeconds = countdownSeconds;
+
+            if (recorder != null && TimePickerDelegate.didRaceStart(previous, countdownSeconds)) {
+                // Plain BehaviorDelegate: its default BACK pops back to here.
+                WatchUi.pushView(new RaceView(recorder), new WatchUi.BehaviorDelegate(), WatchUi.SLIDE_UP);
+                return;
+            }
+        }
         WatchUi.requestUpdate();
     }
     
@@ -149,6 +178,10 @@ class TimePickerView extends WatchUi.View {
         _targetHH = View.findDrawableById("TargetHH") as WatchUi.Text;
         _targetMM = View.findDrawableById("TargetMM") as WatchUi.Text;
         _targetSS = View.findDrawableById("TargetSS") as WatchUi.Text;
+
+        // Cache drawable reference - GPS fix quality indicator
+        _gpsIndicator = View.findDrawableById("GpsIndicator") as GpsIndicatorDrawable;
+        _gpsIndicator.setVisible(_recorder != null);
 
         // Cache drawable references - Dividers and Highlights
         _divider1 = View.findDrawableById("Divider1") as DividerDrawable;
@@ -227,6 +260,12 @@ class TimePickerView extends WatchUi.View {
         var dividerColor = timeDifference < 0 ? Graphics.COLOR_RED : Graphics.COLOR_GREEN;
         _divider1.setColor(dividerColor);
         _divider2.setColor(dividerColor);
+
+        // Update GPS fix quality indicator
+        var recorder = _recorder;
+        if (recorder != null) {
+            _gpsIndicator.setQuality(recorder.getQuality());
+        }
 
         // Update highlights visibility
         var mode = _delegate.getMode();

@@ -1,5 +1,12 @@
 <layout id="MainLayout">
 
+    <!-- GPS fix quality dot, shown while a track is recording -->
+    <drawable id="GpsIndicator" class="GpsIndicatorDrawable">
+        <param name="xPercent">50</param>
+        <param name="yPercent">8</param>
+        <param name="radius">5</param>
+    </drawable>
+
     <!-- Clock time labels (split for string lookup optimization) -->
     <label id="ClockHH" x="26%" y="19%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" />
     <label id="ClockColon1" x="38%" y="19%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" text=":" />

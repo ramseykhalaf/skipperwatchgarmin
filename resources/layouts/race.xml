@@ -1,0 +1,22 @@
+<layout id="RaceLayout">
+
+    <!-- GPS fix quality dot, same position as on the countdown screen -->
+    <drawable id="GpsIndicator" class="GpsIndicatorDrawable">
+        <param name="xPercent">50</param>
+        <param name="yPercent">8</param>
+        <param name="radius">5</param>
+    </drawable>
+
+    <!-- Course over ground, degrees true -->
+    <label id="CogCaption" x="50%" y="17%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_LT_GRAY" text="@Strings.CogCaption" />
+    <label id="CogValue" x="50%" y="33%" font="Graphics.FONT_NUMBER_THAI_HOT" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" />
+
+    <drawable id="Divider" class="DividerDrawable">
+        <param name="yPercent">50</param>
+        <param name="height">6</param>
+    </drawable>
+
+    <!-- Speed over ground, knots -->
+    <label id="SogValue" x="50%" y="67%" font="Graphics.FONT_NUMBER_THAI_HOT" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" />
+    <label id="SogCaption" x="50%" y="84%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_LT_GRAY" text="@Strings.SogCaption" />
+</layout>
