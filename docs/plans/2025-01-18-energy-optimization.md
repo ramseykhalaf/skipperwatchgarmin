@@ -145,7 +145,7 @@ In `draw()` for both:
 
 ## Verification
 
-1. Build and run: `./build.sh && ./run_tests.sh`
+1. Build and run: `./build_sim.sh && ./run_tests.sh`
 2. Test on simulator:
    - Verify countdown updates every second
    - Verify mode switching updates highlights immediately

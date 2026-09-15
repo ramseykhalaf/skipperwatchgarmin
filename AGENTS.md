@@ -20,7 +20,9 @@ Currently, the app consists of a single primary screen (`TimePickerView`) that h
 
 ### Useful Scripts
 - `./run_tests.sh`: Builds and runs the test suite.
-- `./build.sh`: Builds the project for the default device.
+- `./build_sim.sh`: Builds `bin/skipperwatch.prg` for the simulator.
+- `./build_device.sh`: Builds `bin/skipperwatch-fr245m.prg` for the physical watch (copy to `GARMIN/APPS/` over USB).
+- `./export_beta.sh`: Exports `export/skipperwatch-beta.iq` for upload as a Connect IQ beta app.
 - `./start_simulator.sh`: Starts the Garmin simulator.
 
 ### Architecture

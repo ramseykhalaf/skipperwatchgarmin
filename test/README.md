@@ -11,5 +11,5 @@ run_tests.sh
 ## Running Simulator
 
 ```bash
-build.sh && start_simulator.sh
+build_sim.sh && start_simulator.sh
 ```

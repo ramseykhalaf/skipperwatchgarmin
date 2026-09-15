@@ -14,6 +14,10 @@ import Toybox.WatchUi;
 // the watch's Settings > System > Data Recording setting (Smart thins points,
 // Every Second does not) and cannot be changed from here.
 class TrackRecorder {
+    // Values of the deprecated Position.CONSTELLATION_* enum (API 3.2.0).
+    private const GNSS_GPS = 0 as Position.Constellation;
+    private const GNSS_GLONASS = 1 as Position.Constellation;
+
     private var _session as ActivityRecording.Session?;
     private var _quality as Position.Quality = Position.QUALITY_NOT_AVAILABLE;
     private var _startedAt as Time.Moment?;
@@ -23,14 +27,23 @@ class TrackRecorder {
     function initialize() {
     }
 
-    // Turn on the GPS and begin recording. Safe to call when the device lacks
-    // FIT support - the GPS indicator simply never leaves its no-fix state.
+    // Turn on the GPS and begin recording.
+    //
+    // The countdown is the point of the app, so a GPS or recording failure must
+    // never stop it opening: exceptions are caught and the GPS dot simply stays
+    // red. Only Lang exceptions can be caught in Monkey C - a missing symbol
+    // crashes the app outright - so every firmware-dependent API is also
+    // guarded with `has`.
     function start() as Void {
         if (_session != null) {
             return;
         }
 
-        enableGps();
+        try {
+            enableGps();
+        } catch (e) {
+            System.println("GPS unavailable: " + e.getErrorMessage());
+        }
 
         if (!(Toybox has :ActivityRecording)) {
             return;
@@ -41,12 +54,18 @@ class TrackRecorder {
             sport = Activity.SPORT_SAILING;
         }
 
-        _session = ActivityRecording.createSession({
-            :name => WatchUi.loadResource(Rez.Strings.SessionName) as String,
-            :sport => sport
-        });
-        _session.start();
-        _startedAt = Time.now();
+        try {
+            var session = ActivityRecording.createSession({
+                :name => WatchUi.loadResource(Rez.Strings.SessionName) as String,
+                :sport => sport
+            });
+            session.start();
+            _session = session;
+            _startedAt = Time.now();
+        } catch (e) {
+            System.println("Recording unavailable: " + e.getErrorMessage());
+            _session = null;
+        }
     }
 
     // Request continuous fixes using the best solution the firmware offers.
@@ -56,28 +75,30 @@ class TrackRecorder {
     // so the multi-band and SatIQ configurations will report unsupported no
     // matter what Connect IQ version the watch runs; GPS+GLONASS is the ceiling.
     // The SDK profile for fr245m is CIQ 3.3.1 and lacks hasConfigurationSupport
-    // (added in 3.3.6), so the deprecated :constellations path is the fallback.
+    // (added in 3.3.6), but real 245 firmware can be newer, so both paths run
+    // on the watch even though the simulator only ever takes the fallback.
     private function enableGps() as Void {
-        if (Position has :hasConfigurationSupport) {
-            var configuration = bestSupportedConfiguration();
-            if (configuration != null) {
-                try {
-                    Position.enableLocationEvents({
-                        :acquisitionType => Position.LOCATION_CONTINUOUS,
-                        :configuration => configuration
-                    }, method(:onPosition));
-                    return;
-                } catch (e) {
-                    // Fall through to the older constellations API.
-                }
+        var configuration = bestSupportedConfiguration();
+        if (configuration != null) {
+            try {
+                Position.enableLocationEvents({
+                    :acquisitionType => Position.LOCATION_CONTINUOUS,
+                    :configuration => configuration
+                }, method(:onPosition));
+                return;
+            } catch (e) {
+                // Fall through to the older constellations API.
             }
         }
 
+        // The Constellation enum is deprecated in favour of :configuration, but
+        // it is the only multi-GNSS option on CIQ 3.3.1 firmware. Its documented
+        // values are used directly so the build stays warning-free.
         try {
             if (Position has :CONSTELLATION_GLONASS) {
                 Position.enableLocationEvents({
                     :acquisitionType => Position.LOCATION_CONTINUOUS,
-                    :constellations => [Position.CONSTELLATION_GPS, Position.CONSTELLATION_GLONASS]
+                    :constellations => [GNSS_GPS, GNSS_GLONASS]
                 }, method(:onPosition));
                 return;
             }
@@ -89,19 +110,41 @@ class TrackRecorder {
 
     // Best to worst. Everything above GPS+GLONASS needs hardware the 245 does
     // not have, but asking costs nothing and pays off on a better watch.
+    //
+    // Each constant is checked with `has` before it is touched: firmware that
+    // has hasConfigurationSupport need not define every CONFIGURATION_* value,
+    // and referencing a missing one is an uncatchable crash.
     private function bestSupportedConfiguration() as Position.Configuration? {
-        var preferred = [
-            Position.CONFIGURATION_SAT_IQ,
-            Position.CONFIGURATION_GPS_GLONASS_GALILEO_BEIDOU_L1_L5,
-            Position.CONFIGURATION_GPS_GLONASS_GALILEO_BEIDOU_L1,
-            Position.CONFIGURATION_GPS_GLONASS,
-            Position.CONFIGURATION_GPS_GALILEO,
-            Position.CONFIGURATION_GPS
-        ];
-        for (var i = 0; i < preferred.size(); i++) {
-            if (Position.hasConfigurationSupport(preferred[i])) {
-                return preferred[i];
+        if (!(Position has :hasConfigurationSupport)) {
+            return null;
+        }
+        try {
+            if ((Position has :CONFIGURATION_SAT_IQ)
+                    && Position.hasConfigurationSupport(Position.CONFIGURATION_SAT_IQ)) {
+                return Position.CONFIGURATION_SAT_IQ;
             }
+            if ((Position has :CONFIGURATION_GPS_GLONASS_GALILEO_BEIDOU_L1_L5)
+                    && Position.hasConfigurationSupport(Position.CONFIGURATION_GPS_GLONASS_GALILEO_BEIDOU_L1_L5)) {
+                return Position.CONFIGURATION_GPS_GLONASS_GALILEO_BEIDOU_L1_L5;
+            }
+            if ((Position has :CONFIGURATION_GPS_GLONASS_GALILEO_BEIDOU_L1)
+                    && Position.hasConfigurationSupport(Position.CONFIGURATION_GPS_GLONASS_GALILEO_BEIDOU_L1)) {
+                return Position.CONFIGURATION_GPS_GLONASS_GALILEO_BEIDOU_L1;
+            }
+            if ((Position has :CONFIGURATION_GPS_GLONASS)
+                    && Position.hasConfigurationSupport(Position.CONFIGURATION_GPS_GLONASS)) {
+                return Position.CONFIGURATION_GPS_GLONASS;
+            }
+            if ((Position has :CONFIGURATION_GPS_GALILEO)
+                    && Position.hasConfigurationSupport(Position.CONFIGURATION_GPS_GALILEO)) {
+                return Position.CONFIGURATION_GPS_GALILEO;
+            }
+            if ((Position has :CONFIGURATION_GPS)
+                    && Position.hasConfigurationSupport(Position.CONFIGURATION_GPS)) {
+                return Position.CONFIGURATION_GPS;
+            }
+        } catch (e) {
+            // Treat a rejected query as no configuration support.
         }
         return null;
     }

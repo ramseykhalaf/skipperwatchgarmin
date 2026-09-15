@@ -130,4 +130,4 @@ the Music), so a race day is comfortable, but that document is now out of date a
 
 ## Verification
 - `./run_tests.sh` - existing countdown tests plus new recorder-state tests
-- `./build.sh` and run in the simulator with simulated position data
+- `./build_sim.sh` and run in the simulator with simulated position data

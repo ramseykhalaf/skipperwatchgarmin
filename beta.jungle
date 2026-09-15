@@ -1,0 +1,5 @@
+# Used by export_beta.sh: same project, with the beta app id manifest it generates.
+# Paths are explicit because they otherwise resolve relative to the manifest in bin/.
+project.manifest = bin/manifest-beta.xml
+base.sourcePath = source
+base.resourcePath = resources
