@@ -196,17 +196,29 @@ class TimePickerView extends WatchUi.View {
         // Update Countdown Labels
         var timeDifference = _delegate.calculateCountdownSeconds(Time.now());
         var absDifference = timeDifference.abs();
-        var hours = absDifference / 3600;
-        var minutes = (absDifference % 3600) / 60;
-        var seconds = absDifference % 60;
+        // Moment.compare() is declared as Number, so normalize the calculated
+        // components before using them as array indices. Older device runtimes
+        // can otherwise preserve a wider numeric type through these operations.
+        var hours = (absDifference / 3600).toNumber();
+        var minutes = ((absDifference % 3600) / 60).toNumber();
+        var seconds = (absDifference % 60).toNumber();
+
+        // Keep every lookup safe if the device clock changes while this update
+        // is being calculated or a firmware returns an unexpected value.
+        minutes = minutes < 0 ? 0 : (minutes > 59 ? 59 : minutes);
+        seconds = seconds < 0 ? 0 : (seconds > 59 ? 59 : seconds);
 
         // Update countdown - use two overlapping rows, toggle visibility
         var hoursPresent = hours > 0;
 
         if (hoursPresent) {
             // Show hours row, hide mins row
-            var hoursIndex = hours < 60 ? hours : 59;
-            _countdownHoursHH.setText(timeDifference < 0 ? NEGATIVE_SIGNED_60[hoursIndex] : POSITIVE_SIGNED_60[hoursIndex]);
+            var hoursIndex = hours < 0 ? 0 : (hours < 60 ? hours : 59);
+            var hoursText = POSITIVE_SIGNED_60[hoursIndex];
+            if (timeDifference < 0) {
+                hoursText = NEGATIVE_SIGNED_60[hoursIndex];
+            }
+            _countdownHoursHH.setText(hoursText);
             _countdownHoursMM.setText(PADDED_60[minutes]);
             _countdownHoursSS.setText(PADDED_60[seconds]);
 
@@ -223,7 +235,11 @@ class TimePickerView extends WatchUi.View {
             }
         } else {
             // Show mins row, hide hours row
-            _countdownMinutesMM.setText(timeDifference < 0 ? NEGATIVE_SIGNED_60[minutes] : POSITIVE_SIGNED_60[minutes]);
+            var minutesText = POSITIVE_SIGNED_60[minutes];
+            if (timeDifference < 0) {
+                minutesText = NEGATIVE_SIGNED_60[minutes];
+            }
+            _countdownMinutesMM.setText(minutesText);
             _countdownMinutesSS.setText(PADDED_60[seconds]);
 
             if (_hoursRowVisible) {
@@ -267,4 +283,3 @@ class TimePickerView extends WatchUi.View {
         View.onUpdate(dc);
     }
 }
-
