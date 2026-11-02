@@ -42,7 +42,7 @@ class TrackRecordingTest {
     (:test)
     function testPromptsWhenExitingWithASession(logger as Logger) as Boolean {
         var delegate = TrackRecordingFixtures.makeDelegate(new FakeTrackRecorder(true));
-        delegate.setMode(:hours);
+        delegate.setMode(:idle);
         return delegate.shouldPromptToSaveTrack();
     }
 
@@ -50,6 +50,11 @@ class TrackRecordingTest {
     (:test)
     function testNoPromptFromInnerModes(logger as Logger) as Boolean {
         var delegate = TrackRecordingFixtures.makeDelegate(new FakeTrackRecorder(true));
+
+        delegate.setMode(:hours);
+        if (delegate.shouldPromptToSaveTrack()) {
+            return false;
+        }
 
         delegate.setMode(:minutes);
         if (delegate.shouldPromptToSaveTrack()) {
@@ -64,14 +69,14 @@ class TrackRecordingTest {
     (:test)
     function testNoPromptWithoutASession(logger as Logger) as Boolean {
         var delegate = TrackRecordingFixtures.makeDelegate(new FakeTrackRecorder(false));
-        delegate.setMode(:hours);
+        delegate.setMode(:idle);
         return !delegate.shouldPromptToSaveTrack();
     }
 
     (:test)
     function testNoPromptWithoutARecorder(logger as Logger) as Boolean {
         var delegate = TrackRecordingFixtures.makeDelegate(null);
-        delegate.setMode(:hours);
+        delegate.setMode(:idle);
         return !delegate.shouldPromptToSaveTrack();
     }
 }

@@ -140,7 +140,7 @@ class TimePickerDelegate extends WatchUi.BehaviorDelegate {
 
     // Seconds after the gun at which the countdown screen hands over to the
     // race (COG/SOG) screen on its own, whatever is selected.
-    const RACE_SCREEN_DELAY_SECONDS = 10;
+    static const RACE_SCREEN_DELAY_SECONDS = 10;
 
     // True on the tick where the countdown passes RACE_SCREEN_DELAY_SECONDS
     // after the gun. Only the crossing counts, so returning to the countdown
