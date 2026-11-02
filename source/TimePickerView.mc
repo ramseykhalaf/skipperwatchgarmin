@@ -104,6 +104,10 @@ class TimePickerView extends WatchUi.View {
             recorder.start();
         }
 
+        // Forget the last tick, so time spent on the race screen does not
+        // count as a crossing when coming back.
+        _lastCountdownSeconds = null;
+
         // Start timer when view is shown
         if (_timer != null) {
             _timer.start(method(:onTimer), 1000, true);
@@ -126,8 +130,7 @@ class TimePickerView extends WatchUi.View {
             _lastCountdownSeconds = countdownSeconds;
 
             if (recorder != null && TimePickerDelegate.didRaceStart(previous, countdownSeconds)) {
-                // Plain BehaviorDelegate: its default BACK pops back to here.
-                WatchUi.pushView(new RaceView(recorder), new WatchUi.BehaviorDelegate(), WatchUi.SLIDE_UP);
+                delegate.showRaceScreen(WatchUi.SLIDE_UP);
                 return;
             }
         }

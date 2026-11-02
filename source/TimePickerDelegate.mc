@@ -6,8 +6,9 @@ import Toybox.WatchUi;
 
 class TimePickerDelegate extends WatchUi.BehaviorDelegate {
     private var _targetMoment as Time.Moment;
-    private var _mode as Symbol; // :hours, :minutes, :seconds, :countdown
+    private var _mode as Symbol; // :idle (just viewing), :hours, :minutes, :seconds
     private var _recorder as TrackRecorder?;
+    private var _view as TimePickerView?;
 
     function initialize() {
         BehaviorDelegate.initialize();
@@ -21,11 +22,15 @@ class TimePickerDelegate extends WatchUi.BehaviorDelegate {
         var targetInfo = Gregorian.info(_targetMoment, Time.FORMAT_SHORT);
         _targetMoment = setTargetMomentToTimeOfDay(_targetMoment, targetInfo.hour, targetInfo.min, 0);
         
-        _mode = :minutes;
+        _mode = :idle;
     }
 
     function setRecorder(recorder as TrackRecorder?) as Void {
         _recorder = recorder;
+    }
+
+    function setView(view as TimePickerView) as Void {
+        _view = view;
     }
 
     function getCurrentTime() as Time.Moment {
@@ -133,8 +138,26 @@ class TimePickerDelegate extends WatchUi.BehaviorDelegate {
         };
     }
 
+    // Seconds after the gun at which the countdown screen hands over to the
+    // race (COG/SOG) screen on its own, whatever is selected.
+    const RACE_SCREEN_DELAY_SECONDS = 10;
+
+    // True on the tick where the countdown passes RACE_SCREEN_DELAY_SECONDS
+    // after the gun. Only the crossing counts, so returning to the countdown
+    // screen later in the race does not bounce straight back to the race
+    // screen, but pushing the target out for a recall arms it again.
+    static function didRaceStart(previousCountdownSeconds as Number?, countdownSeconds as Number) as Boolean {
+        return (previousCountdownSeconds != null)
+            && (previousCountdownSeconds < RACE_SCREEN_DELAY_SECONDS)
+            && (countdownSeconds >= RACE_SCREEN_DELAY_SECONDS);
+    }
+
+    // START steps into the timer: nothing -> hours -> minutes -> seconds. On
+    // seconds, START snaps the countdown to the nearest whole minute.
     function onSelect() as Boolean {
-        if (_mode == :hours) {
+        if (_mode == :idle) {
+            setMode(:hours);
+        } else if (_mode == :hours) {
             setMode(:minutes);
         } else if (_mode == :minutes) {
             setMode(:seconds);
@@ -144,58 +167,80 @@ class TimePickerDelegate extends WatchUi.BehaviorDelegate {
         return true;
     }
 
-    // True on the tick where the countdown goes from before the gun to at or
-    // after it. Only the crossing counts, so returning to the countdown screen
-    // after the start does not bounce straight back to the race screen, but
-    // pushing the target out for a recall arms it again.
-    static function didRaceStart(previousCountdownSeconds as Number?, countdownSeconds as Number) as Boolean {
-        return (previousCountdownSeconds != null) && (previousCountdownSeconds < 0) && (countdownSeconds >= 0);
-    }
-
-    // Backing out of :hours mode exits the app, which is the moment a recorded
-    // track has to be saved or thrown away.
+    // Backing out with nothing selected exits the app, which is the moment a
+    // recorded track has to be saved or thrown away.
     function shouldPromptToSaveTrack() as Boolean {
         var recorder = _recorder;
-        return (_mode == :hours) && (recorder != null) && recorder.hasSession();
+        return (_mode == :idle) && (recorder != null) && recorder.hasSession();
     }
 
+    // BACK steps out of the timer: seconds -> minutes -> hours -> nothing.
+    // With nothing selected it exits, via the save menu while recording.
     function onBack() as Boolean {
-        if (_mode == :hours) {
-            if (shouldPromptToSaveTrack()) {
-                // Save and Discard exit the app; Resume returns here.
-                SaveMenu.push(_recorder as TrackRecorder);
-                return true;
-            }
-            return false;
+        if (_mode == :seconds) {
+            setMode(:minutes);
+            return true;
         } else if (_mode == :minutes) {
             setMode(:hours);
             return true;
-        } else { // :seconds
-            setMode(:minutes);
+        } else if (_mode == :hours) {
+            setMode(:idle);
             return true;
         }
+        if (shouldPromptToSaveTrack()) {
+            // Save and Discard exit the app; Resume returns here.
+            SaveMenu.push(_recorder as TrackRecorder);
+            return true;
+        }
+        return false;
+    }
+
+    // UP adjusts the selected field, or with nothing selected switches to the
+    // race screen.
+    function handleUp() as Boolean {
+        if (_mode == :hours) {
+            incrementHour();
+        } else if (_mode == :minutes) {
+            incrementMinute();
+        } else if (_mode == :seconds) {
+            incrementSecond();
+        } else {
+            showRaceScreen(WatchUi.SLIDE_DOWN);
+        }
+        return true;
+    }
+
+    function handleDown() as Boolean {
+        if (_mode == :hours) {
+            decrementHour();
+        } else if (_mode == :minutes) {
+            decrementMinute();
+        } else if (_mode == :seconds) {
+            decrementSecond();
+        } else {
+            showRaceScreen(WatchUi.SLIDE_UP);
+        }
+        return true;
+    }
+
+    // Swap the countdown screen for the race screen. Clears the selection,
+    // so coming back shows the timer with nothing selected.
+    function showRaceScreen(transition as WatchUi.SlideType) as Void {
+        _mode = :idle;
+        var view = _view;
+        var recorder = _recorder;
+        if (view == null || recorder == null) {
+            return;
+        }
+        WatchUi.switchToView(new RaceView(recorder), new RaceDelegate(view, self), transition);
     }
 
     function onKey(keyEvent as WatchUi.KeyEvent) as Boolean {
         var key = keyEvent.getKey();
         if (key == WatchUi.KEY_UP) {
-            if (_mode == :hours) {
-                incrementHour();
-            } else if (_mode == :minutes) {
-                incrementMinute();
-            } else if (_mode == :seconds) {
-                incrementSecond();
-            }
-            return true;
+            return handleUp();
         } else if (key == WatchUi.KEY_DOWN) {
-            if (_mode == :hours) {
-                decrementHour();
-            } else if (_mode == :minutes) {
-                decrementMinute();
-            } else if (_mode == :seconds) {
-                decrementSecond();
-            }
-            return true;
+            return handleDown();
         } else if (key == WatchUi.KEY_ENTER) {
             return onSelect();
         } else if (key == WatchUi.KEY_ESC) {
@@ -204,26 +249,54 @@ class TimePickerDelegate extends WatchUi.BehaviorDelegate {
         return false;
     }
 
-    function onUp() as Boolean {
-        if (_mode == :hours) {
-            incrementHour();
-        } else if (_mode == :minutes) {
-            incrementMinute();
-        } else if (_mode == :seconds) {
-            incrementSecond();
-        }
-        return true;
+    function onPreviousPage() as Boolean {
+        return handleUp();
     }
 
-    function onDown() as Boolean {
-        if (_mode == :hours) {
-            decrementHour();
-        } else if (_mode == :minutes) {
-            decrementMinute();
-        } else if (_mode == :seconds) {
-            decrementSecond();
-        }
-        return true;
+    function onNextPage() as Boolean {
+        return handleDown();
     }
 }
 
+// Input for the race screen: UP, DOWN or BACK all return to the countdown
+// screen (BACK does not exit, so a stray press mid-race is harmless).
+class RaceDelegate extends WatchUi.BehaviorDelegate {
+    private var _timerView as TimePickerView;
+    private var _timerDelegate as TimePickerDelegate;
+
+    function initialize(timerView as TimePickerView, timerDelegate as TimePickerDelegate) {
+        BehaviorDelegate.initialize();
+        _timerView = timerView;
+        _timerDelegate = timerDelegate;
+    }
+
+    function showTimer(transition as WatchUi.SlideType) as Boolean {
+        _timerDelegate.setMode(:idle);
+        WatchUi.switchToView(_timerView, _timerDelegate, transition);
+        return true;
+    }
+
+    function onKey(keyEvent as WatchUi.KeyEvent) as Boolean {
+        var key = keyEvent.getKey();
+        if (key == WatchUi.KEY_UP) {
+            return showTimer(WatchUi.SLIDE_DOWN);
+        } else if (key == WatchUi.KEY_DOWN) {
+            return showTimer(WatchUi.SLIDE_UP);
+        } else if (key == WatchUi.KEY_ESC) {
+            return showTimer(WatchUi.SLIDE_DOWN);
+        }
+        return false;
+    }
+
+    function onPreviousPage() as Boolean {
+        return showTimer(WatchUi.SLIDE_DOWN);
+    }
+
+    function onNextPage() as Boolean {
+        return showTimer(WatchUi.SLIDE_UP);
+    }
+
+    function onBack() as Boolean {
+        return showTimer(WatchUi.SLIDE_DOWN);
+    }
+}

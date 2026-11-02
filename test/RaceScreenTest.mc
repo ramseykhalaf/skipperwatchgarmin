@@ -77,10 +77,12 @@ class RaceScreenTest {
 
     (:test)
     function testRaceStartsOnlyOnTheCrossing(logger as Logger) as Boolean {
-        return TimePickerDelegate.didRaceStart(-1, 0)
-            && !TimePickerDelegate.didRaceStart(null, 0)
+        return TimePickerDelegate.didRaceStart(9, 10)
+            && TimePickerDelegate.didRaceStart(-2, 11)
+            && !TimePickerDelegate.didRaceStart(-1, 0)
+            && !TimePickerDelegate.didRaceStart(null, 10)
             && !TimePickerDelegate.didRaceStart(-5, -4)
-            && !TimePickerDelegate.didRaceStart(3, 4);
+            && !TimePickerDelegate.didRaceStart(10, 11);
     }
 
     (:test)

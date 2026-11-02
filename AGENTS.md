@@ -14,7 +14,14 @@ The app provides specialized features for syncing with race start sequences:
 - **Manual Nudging:** Users can nudge the countdown up or down in 1-second increments for fine-tuned adjustments during the sequence.
 
 ## User Interface
-Currently, the app consists of a single primary screen (`TimePickerView`) that handles both time selection and countdown display.
+The app has two screens, switched with UP/DOWN when nothing is selected:
+- **Timer** (`TimePickerView`): the clock, target time and countdown. The app opens here with nothing selected.
+  - START steps in: hours -> minutes -> seconds. On seconds, START snaps the countdown to the nearest minute.
+  - UP/DOWN adjust the selected field.
+  - BACK steps out: seconds -> minutes -> hours -> nothing selected. BACK with nothing selected exits (via the save/discard menu while recording).
+- **Race** (`RaceView`): damped COG and SOG. UP, DOWN or BACK return to the timer.
+
+10 seconds after the gun the timer switches to the race screen on its own, whatever is selected.
 
 ## Development
 

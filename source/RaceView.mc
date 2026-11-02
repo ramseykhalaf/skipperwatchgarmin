@@ -3,8 +3,9 @@ import Toybox.Lang;
 import Toybox.Timer;
 import Toybox.WatchUi;
 
-// Shown automatically when the countdown crosses zero: damped course over
-// ground (COG) on top, damped speed over ground (SOG) below. BACK returns to the
+// Damped course over ground (COG) on top, damped speed over ground (SOG) below.
+// Reached from the countdown screen with UP/DOWN when nothing is selected, and
+// shown automatically 10 seconds after the gun. UP, DOWN or BACK return to the
 // countdown screen, e.g. for a general recall.
 class RaceView extends WatchUi.View {
     private var _recorder as TrackRecorder;

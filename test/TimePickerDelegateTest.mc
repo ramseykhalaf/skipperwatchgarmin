@@ -86,5 +86,25 @@ class TimePickerDelegateTest {
                result[:minute] == 17 && 
                result[:second] == 33;
     }
-}
 
+    // START walks in: nothing -> hours -> minutes -> seconds, and stays on
+    // seconds (where it snaps). BACK walks out again to nothing, then exits.
+    (:test)
+    function testSelectAndBackNavigation(logger as Logger) as Boolean {
+        var delegate = new TestableTimePickerDelegate(Time.now());
+        if (delegate.getMode() != :idle) { return false; }
+        delegate.onSelect();
+        if (delegate.getMode() != :hours) { return false; }
+        delegate.onSelect();
+        if (delegate.getMode() != :minutes) { return false; }
+        delegate.onSelect();
+        if (delegate.getMode() != :seconds) { return false; }
+        delegate.onSelect();
+        if (delegate.getMode() != :seconds) { return false; }
+        if (!delegate.onBack() || delegate.getMode() != :minutes) { return false; }
+        if (!delegate.onBack() || delegate.getMode() != :hours) { return false; }
+        if (!delegate.onBack() || delegate.getMode() != :idle) { return false; }
+        // No recorder, so nothing to save: BACK is left to exit the app.
+        return !delegate.onBack();
+    }
+}

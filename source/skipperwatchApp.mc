@@ -36,6 +36,7 @@ class skipperwatchApp extends Application.AppBase {
         timePickerView.setDelegate(timePickerDelegate);
         timePickerView.setRecorder(_recorder);
         timePickerDelegate.setRecorder(_recorder);
+        timePickerDelegate.setView(timePickerView);
         return [ timePickerView, timePickerDelegate ];
     }
 
